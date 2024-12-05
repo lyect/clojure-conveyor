@@ -1,33 +1,44 @@
 (ns conveyors.node-definitions)
 
 
+(defn in-list? [lst elem]   ;todo: move to utils module, if it will be
+  (some #(= % elem) lst))
+
+
+(def channel-types '(::INT ::PNG))  ;todo: create system of types
+
 (def node-hierarchy (ref {}))
 
 ;аналог Object, не может быть определен штатно
-(dosync (alter node-hierarchy
-               (fn [h] (assoc h :Node {::type :Node
-                                       ::super nil
-                                       ::inputs ()
-                                       ::outputs ()
-                                       ::func ()
-                                       ::fields ()}))))
+(dosync (alter node-hierarchy #(assoc % :Node {::type :Node
+                                               ::super nil
+                                               ::inputs ()
+                                               ::outputs ()
+                                               ::func (fn [])
+                                               ::fields ()})))
+
+(defn append-node-hierarchy [new-type]
+  {:pre [(contains? @node-hierarchy (new-type ::super))
+         (every? (partial in-list? channel-types)
+                 (concat (new-type ::inputs) (new-type ::outputs)))
+         (fn? (new-type ::func))]}                        ;; todo: связать параметры func с типами каналов
+  (dosync (alter node-hierarchy #(assoc % (new-type ::type) new-type))))
 
 
 (defmacro def-node-type [name & sections] "sections is sequence of pair"
   `(let [sec-map# (hash-map ~@sections)
          super# (or (sec-map# :super) :Node)
          super-desc# (@node-hierarchy super#)]
-     (dosync (alter node-hierarchy
-                    (fn [h#] (assoc h# ~name {::type ~name
-                                              ::super super#
-                                              ::inputs (or (sec-map# :inputs) (super-desc# ::inputs))
-                                              ::outputs (or (sec-map# :outputs) (super-desc# ::outputs))
-                                              ::func (or (sec-map# :func) (super-desc# ::func))
-                                              ::fields (or (sec-map# :fields) (super-desc# ::fields))}))))))
+     (append-node-hierarchy {::type ~name
+                             ::super super#
+                             ::inputs (or (sec-map# :inputs) (super-desc# ::inputs))
+                             ::outputs (or (sec-map# :outputs) (super-desc# ::outputs))
+                             ::func (or (sec-map# :func) (super-desc# ::func))
+                             ::fields (or (sec-map# :fields) (super-desc# ::fields))})))
 
 
 (defn has-field? [type field]
-  (some #(= % field) ((@node-hierarchy type) ::fields)))
+  (in-list? ((@node-hierarchy type) ::fields) field))
 
 (defn node-type [node]
   (node ::type))
@@ -39,7 +50,6 @@
   ((@node-hierarchy (node-type node)) prop))
 
 (defn execute [node & params]
-  (println (get-property node ::func))
   (apply (get-property node ::func) params))
 
 (defn get-field [obj field]
