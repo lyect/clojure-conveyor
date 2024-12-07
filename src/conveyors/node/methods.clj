@@ -1,7 +1,7 @@
 (ns conveyors.node.methods
-  (:require [conveyors.utils          :as utils]
-            [conveyors.node.keywords  :as node-keywords]
-            [conveyors.node.hierarchy :as node-hierarchy]))
+  (:require [conveyors.utils           :as utils]
+            [conveyors.node.properties :as node-properties]
+            [conveyors.node.hierarchy  :as node-hierarchy]))
 
 
 (defn node-type-defined?
@@ -11,25 +11,25 @@
 
 (defn- get-node-property
   [node property]
-  {:pre [(let [node-type (node node-keywords/T)]
+  {:pre [(let [node-type (node node-properties/T)]
            (and
             (some? node-type)
             (node-type-defined? node-type)))]}
-  ((node-hierarchy/tree (node node-keywords/T)) property))
+  ((node-hierarchy/tree (node node-properties/T)) property))
 
 
-(defn get-node-type    [node] (get-node-property node node-keywords/T))
-(defn get-node-super   [node] (get-node-property node node-keywords/super))
-(defn get-node-inputs  [node] (get-node-property node node-keywords/inputs))
-(defn get-node-outputs [node] (get-node-property node node-keywords/outputs))
-(defn get-node-func    [node] (get-node-property node node-keywords/func))
-(defn get-node-fields  [node] (get-node-property node node-keywords/fields))
+(defn get-node-type    [node] (get-node-property node node-properties/T))
+(defn get-node-super   [node] (get-node-property node node-properties/super))
+(defn get-node-inputs  [node] (get-node-property node node-properties/inputs))
+(defn get-node-outputs [node] (get-node-property node node-properties/outputs))
+(defn get-node-func    [node] (get-node-property node node-properties/func))
+(defn get-node-fields  [node] (get-node-property node node-properties/fields))
 
 
 ; Node's fields
 (defn get-node-field
   [node field-keyword]
-  {:pre [(let [node-type (node node-keywords/T)]
+  {:pre [(let [node-type (node node-properties/T)]
            (and
             (some? node-type)
             (node-type-defined? node-type)))]}
@@ -41,7 +41,7 @@
   {:pre [(node-type-defined? node-type-keyword)]}
   (let [fields-map (apply hash-map fields)
         node       (ref {})]
-    (dosync (alter node #(assoc % node-keywords/T node-type-keyword)))
+    (dosync (alter node #(assoc % node-properties/T node-type-keyword)))
     (if (utils/lists-equal? (keys fields-map) (get-node-fields node))
       (do
         (doseq [fields-map-entry fields-map]

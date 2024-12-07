@@ -1,4 +1,4 @@
-(ns conveyors.node.keywords)
+(ns conveyors.node.properties)
 
 (def T       ::node-type)
 (def super   ::node-super)
@@ -7,5 +7,5 @@
 (def func    ::node-func)
 (def fields  ::node-fields)
 
-(def keywords [T super inputs outputs func fields])
+(def properties-list [T super inputs outputs func fields])
 

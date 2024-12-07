@@ -1,23 +1,23 @@
 (ns conveyors
   (:require
-   [clojure.test                 :as cljtest]
-   [conveyors.node.base          :as node-base]
-   [conveyors.node.methods       :as node-methods]
-   [conveyors.node.channels      :as node-channels]
-   [conveyors.node.keywords      :as node-keywords]
-   [conveyors.node.type-keywords :as node-type-keywords]))
+   [clojure.test              :as cljtest]
+   [conveyors.node.base       :as node-base]
+   [conveyors.node.methods    :as node-methods]
+   [conveyors.node.channels   :as node-channels]
+   [conveyors.node.properties :as node-properties]
+   [conveyors.node.types      :as node-types]))
 
 (node-base/define-node-type ::TestNode
-                            node-keywords/inputs    (list node-channels/INT node-channels/PNG)
-                            node-keywords/outputs   (list node-channels/PNG)
-                            node-keywords/func      (fn [x] (inc x))
-                            node-keywords/fields   '(::f1 ::f2 ::f3))
+                            node-properties/inputs    (list node-channels/INT node-channels/PNG)
+                            node-properties/outputs   (list node-channels/PNG)
+                            node-properties/func      (fn [x] (inc x))
+                            node-properties/fields   '(::f1 ::f2 ::f3))
 
 (cljtest/deftest node-creation
   (cljtest/testing "Node creation test"
     (let [test-node (node-methods/create ::TestNode ::f1 8 ::f2 "str" ::f3 ::arg)]
       (cljtest/is (= (node-methods/get-node-type    test-node) ::TestNode))
-      (cljtest/is (= (node-methods/get-node-super   test-node) node-type-keywords/Node))
+      (cljtest/is (= (node-methods/get-node-super   test-node) node-types/Node))
       (cljtest/is (= (node-methods/get-node-inputs  test-node) (list node-channels/INT node-channels/PNG)))
       (cljtest/is (= (node-methods/get-node-outputs test-node) (list node-channels/PNG)))
       (cljtest/is (= (node-methods/get-node-fields  test-node) '(::f1 ::f2 ::f3)))

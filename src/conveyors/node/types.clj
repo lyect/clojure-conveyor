@@ -1,4 +1,4 @@
-(ns conveyors.node.type-keywords)
+(ns conveyors.node.types)
 
 ; Base class
 (def Node ::nodetype-Node)
