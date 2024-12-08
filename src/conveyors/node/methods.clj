@@ -1,5 +1,6 @@
 (ns conveyors.node.methods
-  (:require [conveyors.utils           :as utils]
+  (:require [clojure.set               :as cljset]
+            [conveyors.node.exceptions :as node-exceptions]
             [conveyors.node.properties :as node-properties]
             [conveyors.node.hierarchy  :as node-hierarchy]))
 
@@ -39,17 +40,24 @@
 (defn create
   [node-type-keyword & fields]
   {:pre [(node-type-defined? node-type-keyword)]}
-  (let [fields-map (apply hash-map fields)
-        node       (ref {})]
-    (dosync (alter node #(assoc % node-properties/T node-type-keyword)))
-    (if (utils/lists-equal? (keys fields-map) (get-node-fields node))
-      (do
-        (doseq [fields-map-entry fields-map]
-          (dosync (alter node #(assoc % (first fields-map-entry) (second fields-map-entry)))))
-        node)
-      (do
-        (println (str "Passed field list is not equal to field list of " node-type-keyword))
-        nil))))
+  (let [fields-map           (apply hash-map fields)
+        node-fields          (keys fields-map)
+        node-type-fields     ((node-hierarchy/tree node-type-keyword) node-properties/fields)
+        node-fields-set      (set node-fields)
+        node-type-fields-set (set node-type-fields)
+        node                 (ref {})]
+    (when-not (<= (count (take-nth 2 fields)) (count node-fields-set))
+      (throw (node-exceptions/construct node-exceptions/create node-exceptions/duplicating-fields
+                                        (str "Tried to create " node-type-keyword " with duplicated fields"))))
+    (when-not (empty? (cljset/difference node-type-fields-set node-fields-set))
+      (throw (node-exceptions/construct node-exceptions/create node-exceptions/missing-fields
+                                        (str "Tried to create " node-type-keyword " with missing fields"))))
+    (when-not (empty? (cljset/difference node-fields-set node-type-fields-set))
+      (throw (node-exceptions/construct node-exceptions/create node-exceptions/excess-fields
+                                        (str "Tried to create " node-type-keyword " with excess fields"))))
+    (doseq [fields-map-entry fields-map]
+      (dosync (alter node #(assoc % (first fields-map-entry) (second fields-map-entry)))))
+    (dosync (alter node #(assoc % node-properties/T node-type-keyword)))))
 
 ; Abstract methods
 (defn execute

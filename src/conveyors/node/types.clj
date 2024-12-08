@@ -5,3 +5,5 @@
 
 ; Derived classes
 ; (def NewNode ::nodetype-NewNode)
+
+(def types-list [])
