@@ -1,12 +1,12 @@
 (ns channel-define
-  (:require [conveyors.utils           :as utils]
-            [clojure.test              :as cljtest]
-            [conveyors.channel.base    :as channel-base]
-            [conveyors.channel.properties :as channel-properties]
-            [conveyors.channel.methods    :as channel-methods]
-            [conveyors.channel.types      :as channel-types]
+  (:require [clojure.test                 :as cljtest]
+            [conveyors.channel.base       :as channel-base]
             [conveyors.channel.exceptions :as channel-exceptions]
-            [conveyors.channel.hierarchy  :as channel-hierarchy]))
+            [conveyors.channel.hierarchy  :as channel-hierarchy]
+            [conveyors.channel.methods    :as channel-methods]
+            [conveyors.channel.properties :as channel-properties]
+            [conveyors.channel.types      :as channel-types]
+            [conveyors.utils              :as utils]))
 
 
 (intern 'conveyors.channel.types 'types-list [::TestChannel ::DerivedTestChannel])

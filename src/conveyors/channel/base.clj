@@ -1,10 +1,10 @@
 (ns conveyors.channel.base
-  (:require [clojure.set               :as cljset]
-            [conveyors.utils           :as utils]
-            [conveyors.channel.types   :as channel-types]
+  (:require [clojure.set                  :as cljset]
             [conveyors.channel.exceptions :as channel-exceptions]
+            [conveyors.channel.hierarchy  :as channel-hierarchy]
             [conveyors.channel.properties :as channel-properties]
-            [conveyors.channel.hierarchy  :as channel-hierarchy]))
+            [conveyors.channel.types      :as channel-types]
+            [conveyors.utils              :as utils]))
 
 
 (dosync (alter channel-hierarchy/tree #(assoc % channel-types/Channel {channel-properties/T       channel-types/Channel

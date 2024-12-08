@@ -1,15 +1,15 @@
 (ns node-define
-  (:require [conveyors.utils           :as utils]
-            [clojure.test              :as cljtest]
-            [conveyors.node.base       :as node-base]
-            [conveyors.node.methods    :as node-methods]
-            [conveyors.node.exceptions :as node-exceptions]
-            [conveyors.node.hierarchy  :as node-hierarchy]
-            [conveyors.node.properties :as node-properties]
-            [conveyors.node.types      :as node-types]
-            [conveyors.channel.base    :as channel-base]
+  (:require [clojure.test                 :as cljtest]
+            [conveyors.channel.base       :as channel-base]
+            [conveyors.channel.methods    :as channel-methods]
             [conveyors.channel.properties :as channel-properties]
-            [conveyors.channel.methods    :as channel-methods]))
+            [conveyors.node.base          :as node-base]
+            [conveyors.node.exceptions    :as node-exceptions]
+            [conveyors.node.hierarchy     :as node-hierarchy]
+            [conveyors.node.methods       :as node-methods]
+            [conveyors.node.properties    :as node-properties]
+            [conveyors.node.types         :as node-types]
+            [conveyors.utils              :as utils]))
 
 
 (intern 'conveyors.channel.types 'types-list [::TestChannel1 ::TestChannel2 ::TestChannel3])
