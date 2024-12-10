@@ -1,5 +1,5 @@
 (ns channel-create
-  (:require [clojure.test                 :as cljtest]
+  (:require [clojure.test              :as cljtest]
             [blocks.channel.base       :as channel-base]
             [blocks.channel.exceptions :as channel-exceptions]
             [blocks.channel.methods    :as channel-methods]

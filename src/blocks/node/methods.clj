@@ -1,5 +1,5 @@
 (ns blocks.node.methods
-  (:require [clojure.set               :as cljset]
+  (:require [clojure.set            :as cljset]
             [blocks.node.exceptions :as node-exceptions]
             [blocks.node.hierarchy  :as node-hierarchy]
             [blocks.node.properties :as node-properties]))

@@ -1,5 +1,5 @@
 (ns node-create
-  (:require [clojure.test                 :as cljtest]
+  (:require [clojure.test              :as cljtest]
             [blocks.channel.base       :as channel-base]
             [blocks.channel.methods    :as channel-methods]
             [blocks.channel.properties :as channel-properties]

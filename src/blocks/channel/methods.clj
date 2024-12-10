@@ -1,5 +1,5 @@
 (ns blocks.channel.methods
-  (:require [clojure.set                  :as cljset]
+  (:require [clojure.set               :as cljset]
             [blocks.channel.exceptions :as channel-exceptions]
             [blocks.channel.hierarchy  :as channel-hierarchy]
             [blocks.channel.properties :as channel-properties]))
