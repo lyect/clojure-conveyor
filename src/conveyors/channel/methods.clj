@@ -52,6 +52,7 @@
     (when-not (empty? (cljset/difference channel-fields-set channel-type-fields-set))
       (throw (channel-exceptions/construct channel-exceptions/create channel-exceptions/excess-fields
                                            (str "Tried to create " channel-type-keyword " with excess fields"))))
-    (doseq [fields-map-entry fields-map]
-      (dosync (alter channel #(assoc % (first fields-map-entry) (second fields-map-entry)))))
-    (dosync (alter channel #(assoc % channel-properties/T channel-type-keyword)))))
+    (dosync
+      (doseq [fields-map-entry fields-map]
+        (alter channel #(assoc % (first fields-map-entry) (second fields-map-entry))))
+      (alter channel #(assoc % channel-properties/T channel-type-keyword)))))
