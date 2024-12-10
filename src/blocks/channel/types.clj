@@ -1,4 +1,4 @@
-(ns conveyors.channel.types)
+(ns blocks.channel.types)
 
 (def Channel ::channeltype-Channel)
 

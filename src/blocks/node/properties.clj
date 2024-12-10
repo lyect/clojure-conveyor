@@ -1,4 +1,4 @@
-(ns conveyors.node.properties)
+(ns blocks.node.properties)
 
 (def T       ::node-type)
 (def super   ::node-super)

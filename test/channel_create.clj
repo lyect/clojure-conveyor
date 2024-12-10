@@ -1,14 +1,14 @@
 (ns channel-create
   (:require [clojure.test                 :as cljtest]
-            [conveyors.channel.base       :as channel-base]
-            [conveyors.channel.exceptions :as channel-exceptions]
-            [conveyors.channel.methods    :as channel-methods]
-            [conveyors.channel.properties :as channel-properties]
-            [conveyors.channel.types      :as channel-types]
-            [conveyors.utils              :as utils]))
+            [blocks.channel.base       :as channel-base]
+            [blocks.channel.exceptions :as channel-exceptions]
+            [blocks.channel.methods    :as channel-methods]
+            [blocks.channel.properties :as channel-properties]
+            [blocks.channel.types      :as channel-types]
+            [blocks.utils              :as utils]))
 
 
-(intern 'conveyors.channel.types 'types-list [::TestChannel1 ::TestChannel2 ::TestChannel3])
+(intern 'blocks.channel.types 'types-list [::TestChannel1 ::TestChannel2 ::TestChannel3])
 
 (channel-base/define-channel-type ::TestChannel1
                                   channel-properties/fields '(::h ::w))

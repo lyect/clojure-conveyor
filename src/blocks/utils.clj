@@ -1,4 +1,4 @@
-(ns conveyors.utils)
+(ns blocks.utils)
 
 (defn in-list? [lst elem]
   (some #(= % elem) lst))

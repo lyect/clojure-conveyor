@@ -1,8 +1,8 @@
-(ns conveyors.channel.methods
+(ns blocks.channel.methods
   (:require [clojure.set                  :as cljset]
-            [conveyors.channel.exceptions :as channel-exceptions]
-            [conveyors.channel.hierarchy  :as channel-hierarchy]
-            [conveyors.channel.properties :as channel-properties]))
+            [blocks.channel.exceptions :as channel-exceptions]
+            [blocks.channel.hierarchy  :as channel-hierarchy]
+            [blocks.channel.properties :as channel-properties]))
 
 
 (defn channel-type-defined?

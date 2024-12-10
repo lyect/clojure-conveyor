@@ -1,12 +1,12 @@
-(ns conveyors.node.base
+(ns blocks.node.base
   (:require [clojure.set               :as cljset]
-            [conveyors.channel.methods :as channel-methods]
-            [conveyors.channel.types   :as channel-types]
-            [conveyors.node.exceptions :as node-exceptions]
-            [conveyors.node.hierarchy  :as node-hierarchy]
-            [conveyors.node.properties :as node-properties]
-            [conveyors.node.types      :as node-types]
-            [conveyors.utils           :as utils]))
+            [blocks.channel.methods :as channel-methods]
+            [blocks.channel.types   :as channel-types]
+            [blocks.node.exceptions :as node-exceptions]
+            [blocks.node.hierarchy  :as node-hierarchy]
+            [blocks.node.properties :as node-properties]
+            [blocks.node.types      :as node-types]
+            [blocks.utils           :as utils]))
 
 
 (dosync (alter node-hierarchy/tree #(assoc % node-types/Node {node-properties/T       node-types/Node

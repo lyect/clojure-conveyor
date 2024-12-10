@@ -1,5 +1,5 @@
-(ns conveyors.node.exceptions
-  (:require [conveyors.utils :as utils]))
+(ns blocks.node.exceptions
+  (:require [blocks.utils :as utils]))
 
 (def type-keyword  ::nodeexceptionkeyword-type-keyword)
 (def cause-keyword ::nodeexceptionkeyword-cause-keyword)
