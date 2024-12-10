@@ -37,6 +37,9 @@
          (validate-inputs  (new-node-type node-properties/inputs))
          (validate-outputs (new-node-type node-properties/outputs))
          (validate-func    (new-node-type node-properties/func))]}
+  (when (node-hierarchy/tree (new-node-type node-properties/T))
+    (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/type-defined
+                                         (str "Type " (new-node-type node-properties/T) " is already defined"))))
   (dosync (alter node-hierarchy/tree #(assoc % (new-node-type node-properties/T) new-node-type))))
 
 

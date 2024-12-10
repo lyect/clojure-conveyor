@@ -20,19 +20,22 @@
 (def missing-fields             ::channelexceptioncause-missing-fields)
 (def excess-fields              ::channelexceptioncause-excess-fields)
 (def type-not-declared          ::channelexceptioncause-type-not-declared)
+(def type-defined               ::channelexceptioncause-type-defined)
 
 (def causes [duplicating-fields
              super-fields-intersection
              channel-properties-missing
              missing-fields
              excess-fields
-             type-not-declared])
+             type-not-declared
+             type-defined])
 
 
 (def type-causes {define-channel-type [duplicating-fields
                                        super-fields-intersection
                                        channel-properties-missing
-                                       type-not-declared]
+                                       type-not-declared
+                                       type-defined]
                   create              [duplicating-fields
                                        missing-fields
                                        excess-fields]})

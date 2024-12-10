@@ -20,19 +20,22 @@
 (def missing-fields            ::nodeexceptioncause-missing-fields)
 (def excess-fields             ::nodeexceptioncause-excess-fields)
 (def type-not-declared         ::nodeexceptioncause-type-not-declared)
+(def type-defined              ::nodeexceptioncause-type-defined)
 
 (def causes [duplicating-fields
              super-fields-intersection
              node-properties-missing
              missing-fields
              excess-fields
-             type-not-declared])
+             type-not-declared
+             type-defined])
 
 
 (def type-causes {define-node-type [duplicating-fields
                                     super-fields-intersection
                                     node-properties-missing
-                                    type-not-declared]
+                                    type-not-declared
+                                    type-defined]
                   create           [duplicating-fields
                                     missing-fields
                                     excess-fields]})

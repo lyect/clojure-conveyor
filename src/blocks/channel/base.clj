@@ -13,6 +13,9 @@
 
 (defn append-channel-hierarchy [new-channel-type]
   {:pre [(contains? @channel-hierarchy/tree (new-channel-type channel-properties/super))]}
+  (when (channel-hierarchy/tree (new-channel-type channel-properties/T))
+    (throw (channel-exceptions/construct channel-exceptions/define-channel-type channel-exceptions/type-defined
+                                         (str "Type " (new-channel-type channel-properties/T) " is already defined"))))
   (dosync (alter channel-hierarchy/tree #(assoc % (new-channel-type channel-properties/T) new-channel-type))))
 
 

@@ -73,6 +73,31 @@
                  (node-hierarchy/tree node-types/Node)
                  (= (count @node-hierarchy/tree) 1)))))
 
+(cljtest/deftest node-redefine
+  (cljtest/testing "Node redefinition test"
+    (node-base/define-node-type ::TestNode
+      node-properties/inputs  (list test-channel1 test-channel2)
+      node-properties/outputs (list test-channel3)
+      node-properties/func    (fn [x] (inc x))
+      node-properties/fields  '(::f1 ::f2 ::f3))
+    (cljtest/is
+     (try
+       (node-base/define-node-type ::TestNode
+         (node-base/define-node-type ::TestNode
+           node-properties/inputs  (list test-channel2 test-channel3)
+           node-properties/outputs (list test-channel1 test-channel1)
+           node-properties/func    (fn [x] (+ 3 x))
+           node-properties/fields  '(::t1 ::t2)))
+       (catch clojure.lang.ExceptionInfo e
+         (if (and (= node-exceptions/define-node-type (-> e ex-data node-exceptions/type-keyword))
+                  (= node-exceptions/type-defined     (-> e ex-data node-exceptions/cause-keyword)))
+           true
+           false))))
+    (dosync (alter node-hierarchy/tree #(dissoc % ::TestNode)))
+    (cljtest/is (and
+                 (node-hierarchy/tree node-types/Node)
+                 (= (count @node-hierarchy/tree) 1)))))
+
 (cljtest/deftest node-define-duplicated-fields
   (cljtest/testing "Node with duplicated fields definition test"
     (cljtest/is
@@ -86,10 +111,10 @@
          (if (and (= node-exceptions/define-node-type   (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/duplicating-fields (-> e ex-data node-exceptions/cause-keyword)))
            true
-           false))
-       (cljtest/is (and
-                    (node-hierarchy/tree node-types/Node)
-                    (= (count @node-hierarchy/tree) 1)))))))
+           false))))
+    (cljtest/is (and
+                 (node-hierarchy/tree node-types/Node)
+                 (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-super-intersected-fields
   (cljtest/testing "Derived node with fields intersecting super's fields definition test"

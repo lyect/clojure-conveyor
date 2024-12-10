@@ -44,6 +44,24 @@
                  (channel-hierarchy/tree channel-types/Channel)
                  (= (count @channel-hierarchy/tree) 1)))))
 
+(cljtest/deftest channel-redefine
+  (cljtest/testing "Channel redefinition test"
+    (channel-base/define-channel-type ::TestChannel
+      channel-properties/fields '(::h ::w))
+    (cljtest/is
+     (try
+       (channel-base/define-channel-type ::TestChannel
+         channel-properties/fields '(::x ::y))
+       (catch clojure.lang.ExceptionInfo e
+         (if (and (= channel-exceptions/define-channel-type (-> e ex-data channel-exceptions/type-keyword))
+                  (= channel-exceptions/type-defined        (-> e ex-data channel-exceptions/cause-keyword)))
+           true
+           false))))
+    (dosync (alter channel-hierarchy/tree #(dissoc % ::TestChannel)))
+    (cljtest/is (and
+                 (channel-hierarchy/tree channel-types/Channel)
+                 (= (count @channel-hierarchy/tree) 1)))))
+
 (cljtest/deftest channel-define-duplicated-fields
   (cljtest/testing "Channel with duplicated fields definition test"
     (cljtest/is
@@ -52,7 +70,7 @@
          channel-properties/fields '(::h ::h))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= channel-exceptions/define-channel-type (-> e ex-data channel-exceptions/type-keyword))
-                  (= channel-exceptions/duplicating-fields   (-> e ex-data channel-exceptions/cause-keyword)))
+                  (= channel-exceptions/duplicating-fields  (-> e ex-data channel-exceptions/cause-keyword)))
            true
            false))))
     (cljtest/is (and
