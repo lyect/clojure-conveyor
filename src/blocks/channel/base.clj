@@ -1,10 +1,10 @@
-(ns conveyors.channel.base
-  (:require [clojure.set                  :as cljset]
-            [conveyors.channel.exceptions :as channel-exceptions]
-            [conveyors.channel.hierarchy  :as channel-hierarchy]
-            [conveyors.channel.properties :as channel-properties]
-            [conveyors.channel.types      :as channel-types]
-            [conveyors.utils              :as utils]))
+(ns blocks.channel.base
+  (:require [clojure.set               :as cljset]
+            [blocks.channel.exceptions :as channel-exceptions]
+            [blocks.channel.hierarchy  :as channel-hierarchy]
+            [blocks.channel.properties :as channel-properties]
+            [blocks.channel.types      :as channel-types]
+            [blocks.utils              :as utils]))
 
 
 (dosync (alter channel-hierarchy/tree #(assoc % channel-types/Channel {channel-properties/T       channel-types/Channel
@@ -13,6 +13,9 @@
 
 (defn append-channel-hierarchy [new-channel-type]
   {:pre [(contains? @channel-hierarchy/tree (new-channel-type channel-properties/super))]}
+  (when (channel-hierarchy/tree (new-channel-type channel-properties/T))
+    (throw (channel-exceptions/construct channel-exceptions/define-channel-type channel-exceptions/type-defined
+                                         (str "Type " (new-channel-type channel-properties/T) " is already defined"))))
   (dosync (alter channel-hierarchy/tree #(assoc % (new-channel-type channel-properties/T) new-channel-type))))
 
 

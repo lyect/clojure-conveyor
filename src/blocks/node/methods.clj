@@ -1,9 +1,9 @@
-(ns conveyors.node.methods
-  (:require [clojure.set               :as cljset]
-            [conveyors.node.exceptions :as node-exceptions]
-            [conveyors.node.hierarchy  :as node-hierarchy]
-            [conveyors.node.properties :as node-properties]
-            [conveyors.utils :as utils]))
+(ns blocks.node.methods
+  (:require [clojure.set            :as cljset]
+            [blocks.node.exceptions :as node-exceptions]
+            [blocks.node.hierarchy  :as node-hierarchy]
+            [blocks.node.properties :as node-properties]
+            [blocks.utils           :as utils]))
 
 
 (defn node-type-defined?

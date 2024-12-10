@@ -1,9 +1,9 @@
-(ns conveyors.channel.methods
-  (:require [clojure.set                  :as cljset]
-            [conveyors.channel.exceptions :as channel-exceptions]
-            [conveyors.channel.hierarchy  :as channel-hierarchy]
-            [conveyors.channel.properties :as channel-properties]
-            [conveyors.channel.types      :as channel-types]))
+(ns blocks.channel.methods
+  (:require [clojure.set               :as cljset]
+            [blocks.channel.exceptions :as channel-exceptions]
+            [blocks.channel.hierarchy  :as channel-hierarchy]
+            [blocks.channel.properties :as channel-properties]
+            [blocks.channel.types      :as channel-types]))
 
 
 (defn channel-type-defined?

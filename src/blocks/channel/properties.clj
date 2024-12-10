@@ -1,4 +1,4 @@
-(ns conveyors.channel.properties)
+(ns blocks.channel.properties)
 
 (def T       ::channel-type)
 (def super   ::channel-super)
