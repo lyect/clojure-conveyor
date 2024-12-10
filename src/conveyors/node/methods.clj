@@ -55,9 +55,10 @@
     (when-not (empty? (cljset/difference node-fields-set node-type-fields-set))
       (throw (node-exceptions/construct node-exceptions/create node-exceptions/excess-fields
                                         (str "Tried to create " node-type-keyword " with excess fields"))))
-    (doseq [fields-map-entry fields-map]
-      (dosync (alter node #(assoc % (first fields-map-entry) (second fields-map-entry)))))
-    (dosync (alter node #(assoc % node-properties/T node-type-keyword)))))
+    (dosync
+      (doseq [fields-map-entry fields-map]
+        (alter node #(assoc % (first fields-map-entry) (second fields-map-entry))))
+      (alter node #(assoc % node-properties/T node-type-keyword)))))
 
 ; Abstract methods
 (defn execute
