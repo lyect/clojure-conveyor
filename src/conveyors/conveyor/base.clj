@@ -7,8 +7,13 @@
 (def build-exception (partial conveyor-exception/construct conveyor-exception/build))
 
 
-(defn have-one-type? [ch1 ch2]
-  (= (channel-methods/get-channel-type ch1) (channel-methods/get-channel-type ch2)))
+(defn correct-edge? [edge]
+  (and (= (count edge) 4)
+       (node-methods/is-node? (nth edge 0))
+       (pos-int? (nth edge 1))
+       (node-methods/is-node? (nth edge 2))
+       (pos-int? (nth edge 3))))
+
 
 (defn free-channel? [node-in-conv num-ch]
   (or (nil? node-in-conv)
@@ -20,7 +25,7 @@
   (let [conv-forward (ref {})
         conv-backward (ref {})]
     (doseq [edge edges]
-      (when-not (= (count edge) 4)
+      (when-not (correct-edge? edge)
         (throw (build-exception conveyor-exception/incorrect-edge
                                 (str "Tried to add incorrect edge: " edge ". Must be 4 parameters"))))
       (let [node-producer (nth edge 0)
@@ -35,7 +40,7 @@
                              (catch Exception _
                                (throw (build-exception conveyor-exception/non-existent-channel
                                                        (str "Tried to use non-existent channel consumer: " edge)))))]
-        (when-not (have-one-type? ch-producer ch-consumer)
+        (when-not (channel-methods/have-subtype? ch-producer ch-consumer)
           (throw (build-exception conveyor-exception/incompatible-channels
                                   (str "Tried to connect incompatible channels: " edge))))
         (when-not (and (free-channel? (@conv-forward node-producer) num-ch-producer)
