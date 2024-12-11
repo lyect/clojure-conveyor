@@ -34,6 +34,9 @@
       channel-properties/super  ::TestChannel
       channel-properties/fields '(::c))
     (cljtest/is (channel-methods/channel-type-defined? ::DerivedTestChannel))
+    (cljtest/is (channel-types/subtype? ::DerivedTestChannel ::TestChannel))
+    (cljtest/is (channel-types/subtype? ::TestChannel ::TestChannel))
+    (cljtest/is (not (channel-types/subtype? ::TestChannel ::DerivedTestChannel)))
     (let [derived-test-channel-type (channel-hierarchy/tree ::DerivedTestChannel)]
       (cljtest/is (=                  (derived-test-channel-type channel-properties/T)      ::DerivedTestChannel))
       (cljtest/is (=                  (derived-test-channel-type channel-properties/super)  ::TestChannel))
@@ -51,10 +54,8 @@
        (channel-base/define-channel-type ::TestChannel
          channel-properties/fields '(::h ::h))
        (catch clojure.lang.ExceptionInfo e
-         (if (and (= channel-exceptions/define-channel-type (-> e ex-data channel-exceptions/type-keyword))
-                  (= channel-exceptions/duplicating-fields   (-> e ex-data channel-exceptions/cause-keyword)))
-           true
-           false))))
+         (and (= channel-exceptions/define-channel-type (-> e ex-data channel-exceptions/type-keyword))
+              (= channel-exceptions/duplicating-fields   (-> e ex-data channel-exceptions/cause-keyword))))))
     (cljtest/is (and
                  (channel-hierarchy/tree channel-types/Channel)
                  (= (count @channel-hierarchy/tree) 1)))))
@@ -69,10 +70,8 @@
          channel-properties/super  ::TestChannel
          channel-properties/fields '(::h))
        (catch clojure.lang.ExceptionInfo e
-         (if (and (= channel-exceptions/define-channel-type       (-> e ex-data channel-exceptions/type-keyword))
-                  (= channel-exceptions/super-fields-intersection (-> e ex-data channel-exceptions/cause-keyword)))
-           true
-           false))))
+         (and (= channel-exceptions/define-channel-type       (-> e ex-data channel-exceptions/type-keyword))
+              (= channel-exceptions/super-fields-intersection (-> e ex-data channel-exceptions/cause-keyword))))))
     (dosync (alter channel-hierarchy/tree #(dissoc % ::TestChannel)))
     (cljtest/is (and
                  (channel-hierarchy/tree channel-types/Channel)

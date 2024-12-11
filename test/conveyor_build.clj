@@ -18,13 +18,14 @@
 (channel-base/define-channel-type ::TestChannel1
                                   channel-properties/fields '(::h ::w))
 (channel-base/define-channel-type ::TestChannel2
+                                  channel-properties/super ::TestChannel1
                                   channel-properties/fields '(::x ::y))
 (channel-base/define-channel-type ::TestChannel3
                                   channel-properties/super  ::TestChannel1
                                   channel-properties/fields '(::c))
 
 (def test-channel1 (channel-methods/create ::TestChannel1 ::h 1 ::w 2))
-(def test-channel2 (channel-methods/create ::TestChannel2 ::x 3 ::y 4))
+(def test-channel2 (channel-methods/create ::TestChannel2 ::x 3 ::y 4 ::h 1 ::w 2))
 (def test-channel3 (channel-methods/create ::TestChannel3 ::h 4 ::w 6 ::c 10))
 
 
@@ -58,6 +59,15 @@
       (cljtest/is (conveyor-methods/consumer? conv test-node3))
       (cljtest/is (not (conveyor-methods/consumer? conv test-node2))))))
 
+(cljtest/deftest conveyor-building-subtype-channels
+  (cljtest/testing "Conveyor with subtype channels building test"
+    (let [conv1 (conveyor-base/build-conveyor (list test-node1 1 test-node1 1))
+          conv2 (conveyor-base/build-conveyor (list test-node2 2 test-node1 1))]
+      (cljtest/is (conveyor-methods/producer? conv1 test-node1))
+      (cljtest/is (conveyor-methods/consumer? conv1 test-node1))
+      (cljtest/is (conveyor-methods/producer? conv2 test-node2))
+      (cljtest/is (conveyor-methods/consumer? conv2 test-node1)))))
+
 
 (defn right-build-exception? [e right-e]
   (and (= conveyor-exceptions/build (-> e ex-data conveyor-exceptions/type-keyword))
@@ -68,11 +78,25 @@
     (cljtest/is (try (conveyor-base/build-conveyor (list test-node2 2 test-node1))
                      (catch ExceptionInfo e (right-build-exception? e conveyor-exceptions/incorrect-edge))))
     (cljtest/is (try (conveyor-base/build-conveyor (list test-node1 1 test-node2 2 5))
+                     (catch ExceptionInfo e (right-build-exception? e conveyor-exceptions/incorrect-edge))))
+    (cljtest/is (try (conveyor-base/build-conveyor (list test-channel3 2 test-node1 4))
+                     (catch ExceptionInfo e (right-build-exception? e conveyor-exceptions/incorrect-edge))))
+    (cljtest/is (try (conveyor-base/build-conveyor (list test-node1 "1" test-node2 1))
+                     (catch ExceptionInfo e (right-build-exception? e conveyor-exceptions/incorrect-edge))))
+    (cljtest/is (try (conveyor-base/build-conveyor (list test-node1 1 test-channel3 1))
+                     (catch ExceptionInfo e (right-build-exception? e conveyor-exceptions/incorrect-edge))))
+    (cljtest/is (try (conveyor-base/build-conveyor (list test-node1 1 test-node2 "1"))
                      (catch ExceptionInfo e (right-build-exception? e conveyor-exceptions/incorrect-edge))))))
 
 (cljtest/deftest conveyor-building-incompatible-channels
   (cljtest/testing "Conveyor with incompatible channels building test"
     (cljtest/is (try (conveyor-base/build-conveyor (list test-node2 1 test-node1 2))
+                     (catch ExceptionInfo e (right-build-exception? e conveyor-exceptions/incompatible-channels))))
+    (cljtest/is (try (conveyor-base/build-conveyor (list test-node2 1 test-node3 2))
+                     (catch ExceptionInfo e (right-build-exception? e conveyor-exceptions/incompatible-channels))))
+    (cljtest/is (try (conveyor-base/build-conveyor (list test-node2 2 test-node3 2))
+                     (catch ExceptionInfo e (right-build-exception? e conveyor-exceptions/incompatible-channels))))
+    (cljtest/is (try (conveyor-base/build-conveyor (list test-node1 1 test-node1 2))
                      (catch ExceptionInfo e (right-build-exception? e conveyor-exceptions/incompatible-channels))))))
 
 (cljtest/deftest conveyor-building-non-existent-channel

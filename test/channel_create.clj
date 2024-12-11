@@ -39,16 +39,22 @@
       (cljtest/is (= (channel-methods/get-channel-field derived-test-channel ::h) 1))
       (cljtest/is (= (channel-methods/get-channel-field derived-test-channel ::w) 2)))))
 
+(cljtest/deftest channel-subtype
+  (cljtest/testing "Channel subtype? method test"
+    (let [test-channel (channel-methods/create ::TestChannel1 ::h 1 ::w 2)
+          derived-test-channel (channel-methods/create ::TestChannel3 ::h 1 ::w 2 ::c 3)]
+      (cljtest/is (channel-methods/have-subtype? derived-test-channel test-channel))
+      (cljtest/is (channel-methods/have-subtype? test-channel test-channel))
+      (cljtest/is (not (channel-methods/have-subtype? test-channel derived-test-channel))))))
+
 (cljtest/deftest channel-creation-duplicating-fields
   (cljtest/testing "Channel with duplicating fields creation test"
     (cljtest/is
      (try
        (channel-methods/create ::TestChannel1 ::h 1 ::h 2)
        (catch clojure.lang.ExceptionInfo e
-         (if (and (= channel-exceptions/create             (-> e ex-data channel-exceptions/type-keyword))
-                  (= channel-exceptions/duplicating-fields (-> e ex-data channel-exceptions/cause-keyword)))
-           true
-           false))))))
+         (and (= channel-exceptions/create             (-> e ex-data channel-exceptions/type-keyword))
+              (= channel-exceptions/duplicating-fields (-> e ex-data channel-exceptions/cause-keyword))))))))
 
 (cljtest/deftest channel-creation-missing-fields
   (cljtest/testing "Channel with missing fields creation test"
@@ -56,10 +62,8 @@
      (try
        (channel-methods/create ::TestChannel1 ::h 1)
        (catch clojure.lang.ExceptionInfo e
-         (if (and (= channel-exceptions/create         (-> e ex-data channel-exceptions/type-keyword))
-                  (= channel-exceptions/missing-fields (-> e ex-data channel-exceptions/cause-keyword)))
-           true
-           false))))))
+         (and (= channel-exceptions/create         (-> e ex-data channel-exceptions/type-keyword))
+              (= channel-exceptions/missing-fields (-> e ex-data channel-exceptions/cause-keyword))))))))
 
 (cljtest/deftest channel-creation-excess-fields
   (cljtest/testing "Channel with excess fields creation test"
@@ -67,10 +71,8 @@
      (try
        (channel-methods/create ::TestChannel1 ::h 1 ::w 2 ::x 3)
        (catch clojure.lang.ExceptionInfo e
-         (if (and (= channel-exceptions/create        (-> e ex-data channel-exceptions/type-keyword))
-                  (= channel-exceptions/excess-fields (-> e ex-data channel-exceptions/cause-keyword)))
-           true
-           false))))))
+         (and (= channel-exceptions/create        (-> e ex-data channel-exceptions/type-keyword))
+              (= channel-exceptions/excess-fields (-> e ex-data channel-exceptions/cause-keyword))))))))
 
 
 (cljtest/run-tests 'channel-create)

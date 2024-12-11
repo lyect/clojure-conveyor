@@ -42,6 +42,7 @@
 (cljtest/deftest node-creation
   (cljtest/testing "Node creation test"
     (let [test-node (node-methods/create ::TestNode ::f1 8 ::f2 "str" ::f3 ::arg)]
+      (cljtest/is (node-methods/is-node? test-node))
       (cljtest/is (=                  (node-methods/get-node-type    test-node) ::TestNode))
       (cljtest/is (=                  (node-methods/get-node-super   test-node) node-types/Node))
       (cljtest/is (utils/lists-equal? (node-methods/get-node-inputs  test-node) (list test-channel1 test-channel2)))
@@ -63,6 +64,7 @@
 (cljtest/deftest node-creation-derived
   (cljtest/testing "Derived node creation test"
     (let [derived-test-node (node-methods/create ::DerivedTestNode ::f1 8 ::f2 "str" ::f3 ::arg ::f4 '(1 2 3))]
+      (cljtest/is (node-methods/is-node? derived-test-node))
       (cljtest/is (=                  (node-methods/get-node-type    derived-test-node) ::DerivedTestNode))
       (cljtest/is (=                  (node-methods/get-node-super   derived-test-node) ::TestNode))
       (cljtest/is (utils/lists-equal? (node-methods/get-node-inputs  derived-test-node) (list test-channel3 test-channel3)))
@@ -82,16 +84,23 @@
       (cljtest/is (= ((node-methods/get-node-func derived-test-node) -100) -90))
       (cljtest/is (= ((node-methods/get-node-func derived-test-node)    0)  10)))))
 
+(cljtest/deftest is-node-test
+  (cljtest/testing "is-node? method test on false answer"
+    (cljtest/is (not (node-methods/is-node? test-channel1)))
+    (cljtest/is (not (node-methods/is-node? test-channel2)))
+    (cljtest/is (not (node-methods/is-node? test-channel3)))
+    (cljtest/is (not (node-methods/is-node? 5)))
+    (cljtest/is (not (node-methods/is-node? nil)))
+    (cljtest/is (not (node-methods/is-node? {:a 5})))))
+
 (cljtest/deftest node-creation-duplicating-fields
   (cljtest/testing "Node with duplicating fields creation test"
     (cljtest/is
      (try
        (node-methods/create ::TestNode ::f1 8 ::f2 "str" ::f1 9)
        (catch clojure.lang.ExceptionInfo e
-         (if (and (= node-exceptions/create             (-> e ex-data node-exceptions/type-keyword))
-                  (= node-exceptions/duplicating-fields (-> e ex-data node-exceptions/cause-keyword)))
-           true
-           false))))))
+         (and (= node-exceptions/create             (-> e ex-data node-exceptions/type-keyword))
+              (= node-exceptions/duplicating-fields (-> e ex-data node-exceptions/cause-keyword))))))))
 
 (cljtest/deftest node-creation-missing-fields
   (cljtest/testing "Node with missing fields creation test"
@@ -99,10 +108,8 @@
      (try
        (node-methods/create ::TestNode ::f1 8 ::f2 "str")
        (catch clojure.lang.ExceptionInfo e
-         (if (and (= node-exceptions/create         (-> e ex-data node-exceptions/type-keyword))
-                  (= node-exceptions/missing-fields (-> e ex-data node-exceptions/cause-keyword)))
-           true
-           false))))))
+         (and (= node-exceptions/create         (-> e ex-data node-exceptions/type-keyword))
+              (= node-exceptions/missing-fields (-> e ex-data node-exceptions/cause-keyword))))))))
 
 (cljtest/deftest node-creation-excess-fields
   (cljtest/testing "Node with excess fields creation test"
@@ -110,10 +117,8 @@
      (try
        (node-methods/create ::TestNode ::f1 8 ::f2 "str" ::f3 ::arg ::f4 '(1 2 3))
        (catch clojure.lang.ExceptionInfo e
-         (if (and (= node-exceptions/create        (-> e ex-data node-exceptions/type-keyword))
-                  (= node-exceptions/excess-fields (-> e ex-data node-exceptions/cause-keyword)))
-           true
-           false))))))
+         (and (= node-exceptions/create        (-> e ex-data node-exceptions/type-keyword))
+              (= node-exceptions/excess-fields (-> e ex-data node-exceptions/cause-keyword))))))))
 
 
 (cljtest/run-tests 'node-create)
