@@ -1,5 +1,5 @@
 (ns blocks.node.exceptions
-  (:require [utils :as utils]))
+  (:require [utils]))
 
 (def type-keyword  ::nodeexceptionkeyword-type-keyword)
 (def cause-keyword ::nodeexceptionkeyword-cause-keyword)

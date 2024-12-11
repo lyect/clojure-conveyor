@@ -6,7 +6,7 @@
             [blocks.node.hierarchy  :as node-hierarchy]
             [blocks.node.properties :as node-properties]
             [blocks.node.types      :as node-types]
-            [utils           :as utils]))
+            [utils]))
 
 
 (dosync (alter node-hierarchy/tree #(assoc % node-types/Node {node-properties/T       node-types/Node

@@ -1,5 +1,5 @@
 (ns conveyor.exceptions
-  (:require [utils :as utils]))
+  (:require [utils]))
 
 
 (def type-keyword  ::conveyorexceptionkeyword-type-keyword)

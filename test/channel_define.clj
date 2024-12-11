@@ -6,7 +6,7 @@
             [blocks.channel.methods    :as channel-methods]
             [blocks.channel.properties :as channel-properties]
             [blocks.channel.types      :as channel-types]
-            [utils              :as utils]))
+            [utils]))
 
 
 (intern 'blocks.channel.types 'types-list [::TestChannel ::DerivedTestChannel])
