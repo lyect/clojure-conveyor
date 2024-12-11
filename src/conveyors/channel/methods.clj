@@ -2,7 +2,8 @@
   (:require [clojure.set                  :as cljset]
             [conveyors.channel.exceptions :as channel-exceptions]
             [conveyors.channel.hierarchy  :as channel-hierarchy]
-            [conveyors.channel.properties :as channel-properties]))
+            [conveyors.channel.properties :as channel-properties]
+            [conveyors.channel.types      :as channel-types]))
 
 
 (defn channel-type-defined?
@@ -56,3 +57,7 @@
       (doseq [fields-map-entry fields-map]
         (alter channel #(assoc % (first fields-map-entry) (second fields-map-entry))))
       (alter channel #(assoc % channel-properties/T channel-type-keyword)))))
+
+
+(defn have-subtype? [ch1 ch2] "true if type ch1 is subtype of type ch2"
+  (channel-types/subtype? (get-channel-type ch1) (get-channel-type ch2)))
