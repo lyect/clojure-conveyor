@@ -1,4 +1,4 @@
-(ns blocks.utils)
+(ns utils)
 
 (defn in-list? [lst elem]
   (some #(= % elem) lst))

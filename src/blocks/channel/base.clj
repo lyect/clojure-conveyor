@@ -4,7 +4,7 @@
             [blocks.channel.hierarchy  :as channel-hierarchy]
             [blocks.channel.properties :as channel-properties]
             [blocks.channel.types      :as channel-types]
-            [blocks.utils              :as utils]))
+            [utils              :as utils]))
 
 
 (dosync (alter channel-hierarchy/tree #(assoc % channel-types/Channel {channel-properties/T       channel-types/Channel

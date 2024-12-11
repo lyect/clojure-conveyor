@@ -3,7 +3,7 @@
             [blocks.node.exceptions :as node-exceptions]
             [blocks.node.hierarchy  :as node-hierarchy]
             [blocks.node.properties :as node-properties]
-            [blocks.utils           :as utils]))
+            [utils           :as utils]))
 
 
 (defn node-type-defined?

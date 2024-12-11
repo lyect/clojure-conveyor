@@ -1,19 +1,19 @@
 (ns conveyor-build
-  (:require [clojure.test :as cljtest]
-            [conveyors.channel.base :as channel-base]
-            [conveyors.channel.methods :as channel-methods]
-            [conveyors.channel.properties :as channel-properties]
-            [conveyors.conveyor.base :as conveyor-base]
-            [conveyors.conveyor.exceptions :as conveyor-exceptions]
-            [conveyors.conveyor.methods :as conveyor-methods]
-            [conveyors.node.base :as node-base]
-            [conveyors.node.methods :as node-methods]
-            [conveyors.node.properties :as node-properties])
+  (:require [clojure.test              :as cljtest]
+            [blocks.channel.base       :as channel-base]
+            [blocks.channel.methods    :as channel-methods]
+            [blocks.channel.properties :as channel-properties]
+            [blocks.node.base          :as node-base]
+            [blocks.node.methods       :as node-methods]
+            [blocks.node.properties    :as node-properties]
+            [conveyor.base             :as conveyor-base]
+            [conveyor.exceptions       :as conveyor-exceptions]
+            [conveyor.methods          :as conveyor-methods])
   (:import (clojure.lang ExceptionInfo)))
 
 
-(intern 'conveyors.channel.types 'types-list [::TestChannel1 ::TestChannel2 ::TestChannel3])
-(intern 'conveyors.node.types    'types-list [::TestNode ::DerivedTestNode])
+(intern 'blocks.channel.types 'types-list [::TestChannel1 ::TestChannel2 ::TestChannel3])
+(intern 'blocks.node.types    'types-list [::TestNode ::DerivedTestNode])
 
 (channel-base/define-channel-type ::TestChannel1
                                   channel-properties/fields '(::h ::w))

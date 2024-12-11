@@ -1,5 +1,5 @@
 (ns blocks.channel.exceptions
-  (:require [blocks.utils :as utils]))
+  (:require [utils :as utils]))
 
 (def type-keyword  ::channelexceptionkeyword-type-keyword)
 (def cause-keyword ::channelexceptionkeyword-cause-keyword)

@@ -9,7 +9,7 @@
             [blocks.node.methods       :as node-methods]
             [blocks.node.properties    :as node-properties]
             [blocks.node.types         :as node-types]
-            [blocks.utils              :as utils]))
+            [utils              :as utils]))
 
 
 (intern 'blocks.channel.types 'types-list [::TestChannel1 ::TestChannel2 ::TestChannel3])
