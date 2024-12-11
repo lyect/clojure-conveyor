@@ -7,6 +7,6 @@
 
 
 (defn define-bitmap-channel []
-  (when-not (channel-methods/channel-type-defined? channel-types/Bitmap)
+  (when-not (channel-methods/defined? channel-types/Bitmap)
     (channel-base/define-channel-type channel-types/Bitmap
-                                      channel-properties/fields bitmap-channel-fields/field-list)))
+                                      channel-properties/fields bitmap-channel-fields/fields-list)))

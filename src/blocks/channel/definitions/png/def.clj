@@ -7,6 +7,6 @@
 
 
 (defn define-png-channel []
-  (when-not (channel-methods/channel-type-defined? channel-types/PNG)
+  (when-not (channel-methods/defined? channel-types/PNG)
     (channel-base/define-channel-type channel-types/PNG
-                                      channel-properties/fields png-channel-fields/field-list)))
+                                      channel-properties/fields png-channel-fields/fields-list)))

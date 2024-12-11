@@ -7,6 +7,6 @@
   
   
 (defn define-jpeg-channel []
-  (when-not (channel-methods/channel-type-defined? channel-types/JPEG)
+  (when-not (channel-methods/defined? channel-types/JPEG)
     (channel-base/define-channel-type channel-types/JPEG
-                                      channel-properties/fields jpeg-channel-fields/field-list)))
+                                      channel-properties/fields jpeg-channel-fields/fields-list)))

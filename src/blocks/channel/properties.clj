@@ -1,8 +1,8 @@
 (ns blocks.channel.properties)
 
-(def T       ::channel-type)
-(def super   ::channel-super)
-(def fields  ::channel-fields)
 
-(def properties-list [T super fields])
+(def type-name  ::channel-type-name)
+(def super-name ::channel-super-name)
+(def fields     ::channel-fields)
 
+(def properties-list [type-name super-name fields])

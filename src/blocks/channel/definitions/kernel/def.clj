@@ -7,6 +7,6 @@
 
 
 (defn define-kernel-channel []
-  (when-not (channel-methods/channel-type-defined? channel-types/Kernel)
+  (when-not (channel-methods/defined? channel-types/Kernel)
     (channel-base/define-channel-type channel-types/Kernel
-                                      channel-properties/fields kernel-channel-fields/field-list)))
+                                      channel-properties/fields kernel-channel-fields/fields-list)))
