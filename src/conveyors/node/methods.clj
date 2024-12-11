@@ -2,7 +2,8 @@
   (:require [clojure.set               :as cljset]
             [conveyors.node.exceptions :as node-exceptions]
             [conveyors.node.hierarchy  :as node-hierarchy]
-            [conveyors.node.properties :as node-properties]))
+            [conveyors.node.properties :as node-properties]
+            [conveyors.utils :as utils]))
 
 
 (defn node-type-defined?
@@ -64,3 +65,12 @@
 (defn execute
   [node & params]
   (apply (get-node-func node) params))
+
+
+(defn is-node? [obj]
+  (and (some? obj)
+       (map? obj)
+       (contains? obj node-properties/T)
+       (node-type-defined? (obj node-properties/T))
+       (utils/lists-equal? (keys (dissoc obj node-properties/T))
+                           ((@node-hierarchy/tree (obj node-properties/T)) node-properties/fields))))
