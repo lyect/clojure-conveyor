@@ -5,3 +5,6 @@
 
 (defn lists-equal? [l1 l2]
   (and (.containsAll l1 l2) (.containsAll l2 l1)))
+
+(defn zip [coll1 coll2]
+  (map vector coll1 coll2))

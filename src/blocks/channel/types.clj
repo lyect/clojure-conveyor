@@ -2,6 +2,7 @@
   (:require [blocks.channel.hierarchy  :as channel-hierarchy]
             [blocks.channel.properties :as channel-properties]))
 
+
 ;; +----------------------------+
 ;; |                            |
 ;; |   KEYWORD FOR BASE CLASS   |
@@ -16,12 +17,14 @@
 ;; |                                               |
 ;; +-----------------------------------------------+
 
-(def Bitmap ::channeltype-Bitmap)
-(def JPEG   ::channeltype-JPEG)
-(def PNG    ::channeltype-PNG)
-(def Kernel ::channeltype-Kernel)
+(def JpegT    ::channeltype-Jpeg)
+(def PngT     ::channeltype-Png)
+(def BitmapT  ::channeltype-Bitmap)
+(def FloatT   ::channeltype-Float)
+(def IntegerT ::channeltype-Integer)
+(def MatrixT  ::channeltype-Matrix)
 
-(def types-list [Bitmap JPEG PNG Kernel])
+(def types-list [Channel JpegT PngT BitmapT FloatT IntegerT MatrixT])
 
 ;; +-------------------------------------+
 ;; |                                     |
@@ -30,7 +33,7 @@
 ;; +-------------------------------------+
 
 (defn defined?
-  "Check whether type named as _type-keyword_ is defined or not"
+  "Check whether channel type named as _type-keyword_ is defined or not"
   [type-keyword]
   (some? (channel-hierarchy/tree type-keyword)))
 

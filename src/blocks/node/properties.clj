@@ -1,11 +1,11 @@
 (ns blocks.node.properties)
 
-(def T       ::node-type)
-(def super   ::node-super)
-(def inputs  ::node-inputs)
-(def outputs ::node-outputs)
-(def func    ::node-func)
-(def fields  ::node-fields)
 
-(def properties-list [T super inputs outputs func fields])
+(def type-name  ::nodeproperty-type-name)
+(def super-name ::nodeproperty-super-name)
+(def inputs     ::nodeproperty-inputs)
+(def outputs    ::nodeproperty-outputs)
+(def function   ::nodeproperty-function)
+(def fields     ::nodeproperty-fields)
 
+(def properties-list [type-name super-name inputs outputs function fields])

@@ -1,72 +1,98 @@
 (ns node-create
-  (:require [clojure.test              :as cljtest]
-            [blocks.channel.base       :as channel-base]
-            [blocks.channel.methods    :as channel-methods]
-            [blocks.channel.properties :as channel-properties]
-            [blocks.node.base          :as node-base]
-            [blocks.node.exceptions    :as node-exceptions]
-            [blocks.node.methods       :as node-methods]
-            [blocks.node.properties    :as node-properties]
-            [blocks.node.types         :as node-types]
-            [utils]))
+  (:require [clojure.test                              :as cljtest]
+            [blocks.channel.definitions.integer.fields :as integer-channel-fields]
+            [blocks.channel.definitions.integer.def    :as integer-channel-def]
+            [blocks.channel.methods                    :as channel-methods]
+            [blocks.channel.types                      :as channel-types]
+            [blocks.node.base                          :as node-base]
+            [blocks.node.exceptions                    :as node-exceptions]
+            [blocks.node.methods                       :as node-methods]
+            [blocks.node.properties                    :as node-properties]
+            [blocks.node.types                         :as node-types]
+            [utils]
+            
+            ))
 
 
-(intern 'blocks.channel.types 'types-list [::TestChannel1 ::TestChannel2 ::TestChannel3])
-(intern 'blocks.node.types    'types-list [::TestNode ::DerivedTestNode])
+(integer-channel-def/define-integer-channel)
 
-(channel-base/define-channel-type ::TestChannel1
-                                  channel-properties/fields '(::h ::w))
-(channel-base/define-channel-type ::TestChannel2
-                                  channel-properties/fields '(::x ::y))
-(channel-base/define-channel-type ::TestChannel3
-                                  channel-properties/super  ::TestChannel1
-                                  channel-properties/fields '(::c))
 
-(def test-channel1 (channel-methods/create ::TestChannel1 ::h 1 ::w 2))
-(def test-channel2 (channel-methods/create ::TestChannel2 ::x 3 ::y 4))
-(def test-channel3 (channel-methods/create ::TestChannel3 ::h 4 ::w 6 ::c 10))
+(intern 'blocks.node.types    'types-list [node-types/Node ::TestNode ::DerivedTestNode ::UndefinedTestNode])
+
+
+(defn- test-node-function
+  [node x y]
+  (channel-methods/create channel-types/IntegerT
+                          integer-channel-fields/value (+ (channel-methods/get-channel-field x integer-channel-fields/value)
+                                                          (channel-methods/get-channel-field y integer-channel-fields/value)
+                                                          (node-methods/get-node-field node ::f1))))
+
+(defn- derived-test-node-function
+  [node x y z]
+  (channel-methods/create channel-types/IntegerT
+                          integer-channel-fields/value (+ (channel-methods/get-channel-field x integer-channel-fields/value)
+                                                          (channel-methods/get-channel-field y integer-channel-fields/value)
+                                                          (channel-methods/get-channel-field z integer-channel-fields/value)
+                                                          (node-methods/get-node-field node ::f1)
+                                                          (nth (node-methods/get-node-field node ::f4) 0))))
 
 (node-base/define-node-type ::TestNode
-                            node-properties/inputs  (list test-channel1 test-channel2)
-                            node-properties/outputs (list test-channel3)
-                            node-properties/func    (fn [x] (inc x))
-                            node-properties/fields  '(::f1 ::f2 ::f3))
+                            node-properties/inputs   (list channel-types/IntegerT channel-types/IntegerT)
+                            node-properties/outputs  (list channel-types/IntegerT)
+                            node-properties/function test-node-function
+                            node-properties/fields   '(::f1 ::f2 ::f3))
 (node-base/define-node-type ::DerivedTestNode
-                            node-properties/super   ::TestNode
-                            node-properties/inputs  (list test-channel3 test-channel3)
-                            node-properties/outputs (list test-channel1 test-channel2)
-                            node-properties/func    (fn [x] (+ x 10))
-                            node-properties/fields  '(::f4))
+                            node-properties/super-name ::TestNode
+                            node-properties/inputs     (list channel-types/IntegerT channel-types/IntegerT channel-types/IntegerT)
+                            node-properties/outputs    (list channel-types/IntegerT)
+                            node-properties/function   derived-test-node-function
+                            node-properties/fields     '(::f4))
 
 
 (cljtest/deftest node-creation
   (cljtest/testing "Node creation test"
-    (let [test-node (node-methods/create ::TestNode ::f1 8 ::f2 "str" ::f3 ::arg)]
+    (let [test-node (node-methods/create ::TestNode "TestNode" ::f1 8 ::f2 "str" ::f3 ::arg)]
       (cljtest/is (=                  (node-methods/get-node-type    test-node) ::TestNode))
       (cljtest/is (=                  (node-methods/get-node-super   test-node) node-types/Node))
-      (cljtest/is (utils/lists-equal? (node-methods/get-node-inputs  test-node) (list test-channel1 test-channel2)))
-      (cljtest/is (utils/lists-equal? (node-methods/get-node-outputs test-node) (list test-channel3)))
+      (cljtest/is (=                  (node-methods/get-node-name    test-node) "TestNode"))
+      (cljtest/is (utils/lists-equal? (node-methods/get-node-inputs  test-node) (list channel-types/IntegerT channel-types/IntegerT)))
+      (cljtest/is (utils/lists-equal? (node-methods/get-node-outputs test-node) (list channel-types/IntegerT)))
       (cljtest/is (utils/lists-equal? (node-methods/get-node-fields  test-node) '(::f1 ::f2 ::f3)))
 
       (cljtest/is (= (node-methods/get-node-field test-node ::f1) 8))
       (cljtest/is (= (node-methods/get-node-field test-node ::f2) "str"))
       (cljtest/is (= (node-methods/get-node-field test-node ::f3) ::arg))
 
-      (cljtest/is (= (node-methods/execute test-node   15)  16))
-      (cljtest/is (= (node-methods/execute test-node -100) -99))
-      (cljtest/is (= (node-methods/execute test-node    0)   1))
-
-      (cljtest/is (= ((node-methods/get-node-func test-node)   15)  16))
-      (cljtest/is (= ((node-methods/get-node-func test-node) -100) -99))
-      (cljtest/is (= ((node-methods/get-node-func test-node)    0)   1)))))
+      (let [test-channel1 (channel-methods/create channel-types/IntegerT integer-channel-fields/value 15)
+            test-channel2 (channel-methods/create channel-types/IntegerT integer-channel-fields/value  2)]
+        (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute test-node
+                                                                                     test-channel1
+                                                                                     test-channel2)
+                                                               0)
+                                                          integer-channel-fields/value) 25)))
+      (let [test-channel1 (channel-methods/create channel-types/IntegerT integer-channel-fields/value -100)
+            test-channel2 (channel-methods/create channel-types/IntegerT integer-channel-fields/value   30)]
+        (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute test-node
+                                                                                     test-channel1
+                                                                                     test-channel2)
+                                                               0)
+                                                          integer-channel-fields/value) -62)))
+      (let [test-channel1 (channel-methods/create channel-types/IntegerT integer-channel-fields/value 0)
+            test-channel2 (channel-methods/create channel-types/IntegerT integer-channel-fields/value 0)]
+        (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute test-node
+                                                                                     test-channel1
+                                                                                     test-channel2)
+                                                               0)
+                                                          integer-channel-fields/value) 8))))))
 
 (cljtest/deftest node-creation-derived
   (cljtest/testing "Derived node creation test"
-    (let [derived-test-node (node-methods/create ::DerivedTestNode ::f1 8 ::f2 "str" ::f3 ::arg ::f4 '(1 2 3))]
+    (let [derived-test-node (node-methods/create ::DerivedTestNode "DerivedTestNode" ::f1 8 ::f2 "str" ::f3 ::arg ::f4 '(1 2 3))]
       (cljtest/is (=                  (node-methods/get-node-type    derived-test-node) ::DerivedTestNode))
       (cljtest/is (=                  (node-methods/get-node-super   derived-test-node) ::TestNode))
-      (cljtest/is (utils/lists-equal? (node-methods/get-node-inputs  derived-test-node) (list test-channel3 test-channel3)))
-      (cljtest/is (utils/lists-equal? (node-methods/get-node-outputs derived-test-node) (list test-channel1 test-channel2)))
+      (cljtest/is (=                  (node-methods/get-node-name    derived-test-node) "DerivedTestNode"))
+      (cljtest/is (utils/lists-equal? (node-methods/get-node-inputs  derived-test-node) (list channel-types/IntegerT channel-types/IntegerT channel-types/IntegerT)))
+      (cljtest/is (utils/lists-equal? (node-methods/get-node-outputs derived-test-node) (list channel-types/IntegerT)))
       (cljtest/is (utils/lists-equal? (node-methods/get-node-fields  derived-test-node) '(::f1 ::f2 ::f3 ::f4)))
 
       (cljtest/is (=                  (node-methods/get-node-field derived-test-node ::f1) 8))
@@ -74,19 +100,73 @@
       (cljtest/is (=                  (node-methods/get-node-field derived-test-node ::f3) ::arg))
       (cljtest/is (utils/lists-equal? (node-methods/get-node-field derived-test-node ::f4) '(1 2 3)))
 
-      (cljtest/is (= (node-methods/execute derived-test-node   15)  25))
-      (cljtest/is (= (node-methods/execute derived-test-node -100) -90))
-      (cljtest/is (= (node-methods/execute derived-test-node    0)  10))
+      (let [test-channel1 (channel-methods/create channel-types/IntegerT integer-channel-fields/value 15)
+            test-channel2 (channel-methods/create channel-types/IntegerT integer-channel-fields/value  2)
+            test-channel3 (channel-methods/create channel-types/IntegerT integer-channel-fields/value 11)]
+        (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute derived-test-node
+                                                                                     test-channel1
+                                                                                     test-channel2
+                                                                                     test-channel3)
+                                                               0)
+                                                          integer-channel-fields/value) 37)))
 
-      (cljtest/is (= ((node-methods/get-node-func derived-test-node)   15)  25))
-      (cljtest/is (= ((node-methods/get-node-func derived-test-node) -100) -90))
-      (cljtest/is (= ((node-methods/get-node-func derived-test-node)    0)  10)))))
+      (let [test-channel1 (channel-methods/create channel-types/IntegerT integer-channel-fields/value -1)
+            test-channel2 (channel-methods/create channel-types/IntegerT integer-channel-fields/value -5)
+            test-channel3 (channel-methods/create channel-types/IntegerT integer-channel-fields/value -7)]
+        (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute derived-test-node
+                                                                                     test-channel1
+                                                                                     test-channel2
+                                                                                     test-channel3)
+                                                               0)
+                                                          integer-channel-fields/value) -4)))
+      (let [test-channel1 (channel-methods/create channel-types/IntegerT integer-channel-fields/value 0)
+            test-channel2 (channel-methods/create channel-types/IntegerT integer-channel-fields/value 0)
+            test-channel3 (channel-methods/create channel-types/IntegerT integer-channel-fields/value 0)]
+        (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute derived-test-node
+                                                                                     test-channel1
+                                                                                     test-channel2
+                                                                                     test-channel3)
+                                                               0)
+                                                          integer-channel-fields/value) 9))))))
+
+(cljtest/deftest node-creation-type-undeclared
+  (cljtest/testing "Node with undeclared type creation test"
+    (cljtest/is
+     (try
+       (node-methods/create ::UndeclaredTestNode "UndeclaredTestNode")
+       (catch clojure.lang.ExceptionInfo e
+         (if (and (= node-exceptions/create          (-> e ex-data node-exceptions/type-keyword))
+                  (= node-exceptions/type-undeclared (-> e ex-data node-exceptions/cause-keyword)))
+           true
+           false))))))
+
+(cljtest/deftest node-creation-type-undefined
+  (cljtest/testing "Node with undefined type creation test"
+    (cljtest/is
+     (try
+       (node-methods/create ::UndefinedTestNode "UndefinedTestNode")
+       (catch clojure.lang.ExceptionInfo e
+         (if (and (= node-exceptions/create         (-> e ex-data node-exceptions/type-keyword))
+                  (= node-exceptions/type-undefined (-> e ex-data node-exceptions/cause-keyword)))
+           true
+           false))))))
+
+(cljtest/deftest node-creation-abstract
+  (cljtest/testing "Abstract node creation test"
+    (cljtest/is
+     (try
+       (node-methods/create node-types/Node "Node")
+       (catch clojure.lang.ExceptionInfo e
+         (if (and (= node-exceptions/create            (-> e ex-data node-exceptions/type-keyword))
+                  (= node-exceptions/abstract-creation (-> e ex-data node-exceptions/cause-keyword)))
+           true
+           false))))))
 
 (cljtest/deftest node-creation-duplicating-fields
   (cljtest/testing "Node with duplicating fields creation test"
     (cljtest/is
      (try
-       (node-methods/create ::TestNode ::f1 8 ::f2 "str" ::f1 9)
+       (node-methods/create ::TestNode "TestNode" ::f1 8 ::f2 "str" ::f1 1)
        (catch clojure.lang.ExceptionInfo e
          (if (and (= node-exceptions/create             (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/duplicating-fields (-> e ex-data node-exceptions/cause-keyword)))
@@ -97,7 +177,7 @@
   (cljtest/testing "Node with missing fields creation test"
     (cljtest/is
      (try
-       (node-methods/create ::TestNode ::f1 8 ::f2 "str")
+       (node-methods/create ::TestNode "TestNode" ::f1 8 ::f2 "str")
        (catch clojure.lang.ExceptionInfo e
          (if (and (= node-exceptions/create         (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/missing-fields (-> e ex-data node-exceptions/cause-keyword)))
@@ -108,7 +188,7 @@
   (cljtest/testing "Node with excess fields creation test"
     (cljtest/is
      (try
-       (node-methods/create ::TestNode ::f1 8 ::f2 "str" ::f3 ::arg ::f4 '(1 2 3))
+       (node-methods/create ::TestNode "TestNode" ::f1 8 ::f2 "str" ::f3 ::arg ::f4 '(1 2 3))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= node-exceptions/create        (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/excess-fields (-> e ex-data node-exceptions/cause-keyword)))
