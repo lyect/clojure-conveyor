@@ -106,18 +106,16 @@
           node-type-fields     ((node-hierarchy/tree node-type-name) node-properties/fields)
           node-type-fields-set (set node-type-fields)
           node                 (ref {})]
-      
+
       (when-not (empty? (cljset/difference node-type-fields-set node-all-fields-set))
         (throw (node-exceptions/construct node-exceptions/create node-exceptions/missing-fields
                                           (str "Tried to create " node-type-name " with missing fields"))))
       (when-not (empty? (cljset/difference node-all-fields-set node-type-fields-set))
         (throw (node-exceptions/construct node-exceptions/create node-exceptions/excess-fields
                                           (str "Tried to create " node-type-name " with excess fields"))))
-      (dosync
-       (doseq [all-fields-map-entry all-fields-map]
-         (alter node #(assoc % (first all-fields-map-entry) (second all-fields-map-entry))))
-       (alter node #(assoc % node-base/type-name node-type-name)))))
-  )
+      (doseq [all-fields-map-entry all-fields-map]
+        (alter node #(assoc % (first all-fields-map-entry) (second all-fields-map-entry))))
+      (alter node #(assoc % node-base/type-name node-type-name)))))
 
 ;; +---------------------------+
 ;; |                           |
@@ -155,4 +153,3 @@
         output-parameters (if (or (list? output) (vector? output)) output (vector output))]
     (doall (map validate-output-parameter (utils/zip output-parameters (get-node-outputs node))))
     output-parameters))
-  

@@ -22,7 +22,7 @@
 
 (cljtest/deftest channel-creation
   (cljtest/testing "Channel creation test"
-    (let [test-channel (channel-methods/create ::TestChannel1 ::h 1 ::w 2)]
+    (let [test-channel (dosync (channel-methods/create ::TestChannel1 ::h 1 ::w 2))]
       (cljtest/is (=                  (channel-methods/get-channel-type-name  test-channel) ::TestChannel1))
       (cljtest/is (=                  (channel-methods/get-channel-super-name test-channel) channel-types/Channel))
       (cljtest/is (utils/lists-equal? (channel-methods/get-channel-fields     test-channel) '(::h ::w)))
@@ -32,7 +32,7 @@
 
 (cljtest/deftest channel-creation-derived
   (cljtest/testing "Derived channel creation test"
-    (let [derived-test-channel (channel-methods/create ::TestChannel3 ::h 1 ::w 2 ::c 3)]
+    (let [derived-test-channel (dosync (channel-methods/create ::TestChannel3 ::h 1 ::w 2 ::c 3))]
       (cljtest/is (=                  (channel-methods/get-channel-type-name  derived-test-channel) ::TestChannel3))
       (cljtest/is (=                  (channel-methods/get-channel-super-name derived-test-channel) ::TestChannel1))
       (cljtest/is (utils/lists-equal? (channel-methods/get-channel-fields     derived-test-channel) '(::h ::w ::c)))
@@ -44,7 +44,7 @@
   (cljtest/testing "Channel with undeclared type fields creation test"
     (cljtest/is
      (try
-       (channel-methods/create ::UndeclaredChannel)
+       (dosync (channel-methods/create ::UndeclaredChannel))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= channel-exceptions/create          (-> e ex-data channel-exceptions/type-keyword))
                   (= channel-exceptions/type-undeclared (-> e ex-data channel-exceptions/cause-keyword)))
@@ -55,7 +55,7 @@
   (cljtest/testing "Channel with undefined type fields creation test"
     (cljtest/is
      (try
-       (channel-methods/create ::UndefinedChannel)
+       (dosync (channel-methods/create ::UndefinedChannel))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= channel-exceptions/create         (-> e ex-data channel-exceptions/type-keyword))
                   (= channel-exceptions/type-undefined (-> e ex-data channel-exceptions/cause-keyword)))
@@ -66,7 +66,7 @@
   (cljtest/testing "Abstract channel creation test"
     (cljtest/is
      (try
-       (channel-methods/create channel-types/Channel)
+       (dosync (channel-methods/create channel-types/Channel))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= channel-exceptions/create            (-> e ex-data channel-exceptions/type-keyword))
                   (= channel-exceptions/abstract-creation (-> e ex-data channel-exceptions/cause-keyword)))
@@ -77,7 +77,7 @@
   (cljtest/testing "Channel with duplicating fields creation test"
     (cljtest/is
      (try
-       (channel-methods/create ::TestChannel1 ::h 1 ::h 2)
+       (dosync (channel-methods/create ::TestChannel1 ::h 1 ::h 2))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= channel-exceptions/create             (-> e ex-data channel-exceptions/type-keyword))
                   (= channel-exceptions/duplicating-fields (-> e ex-data channel-exceptions/cause-keyword)))
@@ -88,7 +88,7 @@
   (cljtest/testing "Channel with missing fields creation test"
     (cljtest/is
      (try
-       (channel-methods/create ::TestChannel1 ::h 1)
+       (dosync (channel-methods/create ::TestChannel1 ::h 1))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= channel-exceptions/create         (-> e ex-data channel-exceptions/type-keyword))
                   (= channel-exceptions/missing-fields (-> e ex-data channel-exceptions/cause-keyword)))
@@ -99,7 +99,7 @@
   (cljtest/testing "Channel with excess fields creation test"
     (cljtest/is
      (try
-       (channel-methods/create ::TestChannel1 ::h 1 ::w 2 ::x 3)
+       (dosync (channel-methods/create ::TestChannel1 ::h 1 ::w 2 ::x 3))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= channel-exceptions/create        (-> e ex-data channel-exceptions/type-keyword))
                   (= channel-exceptions/excess-fields (-> e ex-data channel-exceptions/cause-keyword)))

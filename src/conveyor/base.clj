@@ -1,57 +1,65 @@
 (ns conveyor.base
-  (:require [blocks.channel.methods :as channel-methods]
-            [blocks.node.methods    :as node-methods]
-            [conveyor.exceptions    :as conveyor-exception]))
+  (:require [blocks.edge.methods   :as edge-methods]
+            [blocks.vertex.methods :as vertex-methods]
+            [conveyor.exceptions   :as conveyor-exceptions]
+            [conveyor.properties   :as conveyor-properties]))
 
+(defn- initialize-vertices
+  "Initialize conveyor's vertices"
+  [nodes]
+  (vector (map vertex-methods/create nodes)))
 
-(def build-exception (partial conveyor-exception/construct conveyor-exception/build))
-
-
-(defn correct-edge? [edge]
-  (and (= (count edge) 4)
-       (node-methods/is-node? (nth edge 0))
-       (pos-int? (nth edge 1))
-       (node-methods/is-node? (nth edge 2))
-       (pos-int? (nth edge 3))))
-
-
-(defn free-channel? [node-in-conv num-ch]
-  (or (nil? node-in-conv)
-      (not (contains? @node-in-conv num-ch))))
-
-
-(defn build-conveyor [& edges]
-  "\"edges\" - sequence of (<node-producer> <number output channel> <node-consumer> <number input channel>)"
-  (let [conv-forward (ref {})
-        conv-backward (ref {})]
+(defn- initialize-edges-map
+  "Initialize conveyor's edges map"
+  [vertices edges]
+  (let [edges-map (ref {})]
     (doseq [edge edges]
-      (when-not (correct-edge? edge)
-        (throw (build-exception conveyor-exception/incorrect-edge
-                                (str "Tried to add incorrect edge: " edge ". Must be 4 parameters"))))
-      (let [node-producer (nth edge 0)
-            num-ch-producer (dec (nth edge 1))
-            ch-producer (try (nth (node-methods/get-node-outputs node-producer) num-ch-producer)
-                             (catch Exception _
-                               (throw (build-exception conveyor-exception/non-existent-channel
-                                                       (str "Tried to use non-existent channel producer: " edge)))))
-            node-consumer (nth edge 2)
-            num-ch-consumer (dec (nth edge 3))
-            ch-consumer (try (nth (node-methods/get-node-inputs node-consumer) num-ch-consumer)
-                             (catch Exception _
-                               (throw (build-exception conveyor-exception/non-existent-channel
-                                                       (str "Tried to use non-existent channel consumer: " edge)))))]
-        (when-not (channel-methods/have-subtype? ch-producer ch-consumer)
-          (throw (build-exception conveyor-exception/incompatible-channels
-                                  (str "Tried to connect incompatible channels: " edge))))
-        (when-not (and (free-channel? (@conv-forward node-producer) num-ch-producer)
-                       (free-channel? (@conv-backward node-consumer) num-ch-consumer))
-          (throw (build-exception conveyor-exception/twice-use
-                                  (str "Tried to use channel twice: " edge))))
-        (dosync
-          (when-not (contains? @conv-forward node-producer)
-            (alter conv-forward #(assoc % node-producer (ref {}))))
-          (alter (@conv-forward node-producer) #(assoc % num-ch-producer [node-consumer num-ch-consumer]))
-          (when-not (contains? @conv-backward node-consumer)
-            (alter conv-backward #(assoc % node-consumer (ref {}))))
-          (alter (@conv-backward node-consumer) #(assoc % num-ch-consumer [node-producer num-ch-producer])))))
-    [conv-forward conv-backward]))
+      (let [begin-vertex-index        (edge-methods/get-begin-vertex-index        edge)
+            begin-vertex-output-index (edge-methods/get-begin-vertex-output-index edge)
+            end-vertex-index          (edge-methods/get-end-vertex-index          edge)
+            end-vertex-input-index    (edge-methods/get-end-vertex-input-index    edge)
+            begin-vertex              (nth vertices begin-vertex-index)
+            end-vertex                (nth vertices end-vertex-index)
+            begin-vertex-output       (vertex-methods/get-output begin-vertex begin-vertex-output-index)
+            end-vertex-input          (vertex-methods/get-input  end-vertex   end-vertex-input-index)]
+        (when-not (= begin-vertex-output end-vertex-input)
+          (throw (conveyor-exceptions/construct conveyor-exceptions/create conveyor-exceptions/different-input-output
+                                                (str "Output of \"" begin-vertex "\" differs from input of \"" end-vertex "\" for edge \"" edge "\""))))
+        (vertex-methods/set-output-used begin-vertex begin-vertex-output-index)
+        (vertex-methods/set-input-used  end-vertex   end-vertex-input-index)
+        (alter edges-map #(assoc % [begin-vertex-index begin-vertex-output-index] [end-vertex-index end-vertex-input-index]))))))
+
+(defn- initialize-inputs
+  "Initialize conveyor's inputs"
+  [vertices]
+  (reduce
+   (fn [inputs [index vertex]]
+     (if (not (vertex-methods/all-inputs-used? vertex))
+       (conj inputs index)
+       inputs))
+   []
+   (keep-indexed vector vertices)))
+  
+(defn- initialize-outputs
+  "Initialize conveyor's outputs"
+  [vertices]
+  (reduce
+   (fn [outputs [index vertex]]
+     (if (not (vertex-methods/all-outputs-used? vertex))
+       (conj outputs index)
+       outputs))
+   []
+   (keep-indexed vector vertices)))
+
+(defn create
+  "\"edges\" - sequence of (<node-producer> <number output channel> <node-consumer> <number input channel>)"
+  [nodes edges]
+  (let [conveyor  (ref {})
+        vertices  (initialize-vertices nodes)
+        edges-map (initialize-edges-map vertices edges)
+        inputs    (initialize-inputs vertices)
+        outputs   (initialize-outputs vertices)]
+    (alter conveyor #(assoc % conveyor-properties/vertices vertices))
+    (alter conveyor #(assoc % conveyor-properties/edges    edges-map))
+    (alter conveyor #(assoc % conveyor-properties/inputs   inputs))
+    (alter conveyor #(assoc % conveyor-properties/outputs  outputs))))
