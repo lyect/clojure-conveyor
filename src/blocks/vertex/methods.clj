@@ -47,7 +47,6 @@
 (defn get-vertex-inputs-used   [vertex] (get-vertex-property vertex vertex-properties/inputs-used))
 (defn get-vertex-outputs-used  [vertex] (get-vertex-property vertex vertex-properties/outputs-used))
 (defn get-vertex-inputs-ready  [vertex] (get-vertex-property vertex vertex-properties/inputs-ready))
-(defn get-vertex-outputs-ready [vertex] (get-vertex-property vertex vertex-properties/outputs-ready))
 
 ;; +--------------------+
 ;; |                    |
@@ -70,6 +69,22 @@
     (throw (vertex-exceptions/construct vertex-exceptions/get-output vertex-exceptions/not-vertex
                                         (str "\"" vertex "\" is not a vertex"))))
   (nth (node-methods/get-node-outputs (get-vertex-node vertex)) output-index))
+
+(defn inputs-count
+  "Get number of inputs in _vertex_"
+  [vertex]
+  (when-not (vertex? vertex)
+    (throw (vertex-exceptions/construct vertex-exceptions/get-inputs-count vertex-exceptions/not-vertex
+                                        (str "\"" vertex "\" is not a vertex"))))
+  (count (node-methods/get-node-inputs (get-vertex-node vertex))))
+
+(defn outputs-count
+  "Get number of outputs in _vertex_"
+  [vertex]
+  (when-not (vertex? vertex)
+    (throw (vertex-exceptions/construct vertex-exceptions/get-outputs-count vertex-exceptions/not-vertex
+                                        (str "\"" vertex "\" is not a vertex"))))
+  (count (node-methods/get-node-outputs (get-vertex-node vertex))))
 
 ;; +----------------------------------------------+
 ;; |                                              |
@@ -284,10 +299,10 @@
     (throw (vertex-exceptions/construct vertex-exceptions/create vertex-exceptions/not-node
                                         (str "\"" node "\" is not a node"))))
   (let [vertex (ref {})]
-     (alter vertex #(assoc % vertex-properties/node         node))
-     (alter vertex #(assoc % vertex-properties/inputs-used  (initialize-inputs-used node)))
-     (alter vertex #(assoc % vertex-properties/outputs-used (initialize-outputs-used node)))
-     (alter vertex #(assoc % vertex-properties/inputs-ready (initialize-inputs-ready node)))
+    (alter vertex #(assoc % vertex-properties/node         node))
+    (alter vertex #(assoc % vertex-properties/inputs-used  (initialize-inputs-used node)))
+    (alter vertex #(assoc % vertex-properties/outputs-used (initialize-outputs-used node)))
+    (alter vertex #(assoc % vertex-properties/inputs-ready (initialize-inputs-ready node)))
     (when-not (utils/lists-equal? vertex-properties/properties-list (keys @vertex))
       (throw (vertex-exceptions/construct vertex-exceptions/create vertex-exceptions/vertex-properties-missing
                                           "Not all vertex-properties are added to create function")))))

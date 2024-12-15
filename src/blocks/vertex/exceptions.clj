@@ -33,6 +33,8 @@
 (def reset-input-ready   ::vertexexceptiontype-reset-input-ready)
 (def input-ready         ::vertexexceptiontype-input-ready)
 (def all-inputs-ready    ::vertexexceptiontype-all-inputs-ready)
+(def get-inputs-count    ::vertexexceptiontype-get-inputs-count)
+(def get-outputs-count   ::vertexexceptiontype-get-outputs-count)
 
 (def ^:private type-list [get-vertex-property
                           create
@@ -49,7 +51,9 @@
                           set-input-ready
                           reset-input-ready
                           input-ready
-                          all-inputs-ready])
+                          all-inputs-ready
+                          get-inputs-count
+                          get-outputs-count])
 
 ;; +----------------------+
 ;; |                      |
@@ -97,7 +101,9 @@
                                             reset-input-ready   [not-vertex
                                                                  already-reset]
                                             input-ready         [not-vertex]
-                                            all-inputs-ready    [not-vertex]})
+                                            all-inputs-ready    [not-vertex]
+                                            get-inputs-count    [not-vertex]
+                                            get-outputs-count   [not-vertex]})
 
 ;; +---------------------------+
 ;; |                           |

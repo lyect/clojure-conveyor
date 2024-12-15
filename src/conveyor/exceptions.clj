@@ -27,9 +27,11 @@
 ;; |                      |
 ;; +----------------------+
 
-(def different-input-output ::conveyorexceptioncause-different-input-output)
+(def different-input-output      ::conveyorexceptioncause-different-input-output)
+(def conveyor-properties-missing ::conveyorexceptioncause-conveyor-properties-missing)
 
-(def ^:private cause-list [different-input-output])
+(def ^:private cause-list [different-input-output
+                           conveyor-properties-missing])
 
 ;; +---------------------------------------------------+
 ;; |                                                   |
@@ -37,7 +39,8 @@
 ;; |                                                   |
 ;; +---------------------------------------------------+
 
-(def ^:private types-causes-correspondence {create [different-input-output]})
+(def ^:private types-causes-correspondence {create [different-input-output
+                                                    conveyor-properties-missing]})
 
 ;; +---------------------------+
 ;; |                           |
