@@ -15,6 +15,7 @@
 
 (defn define-sharpen-node []
   (when-not (node-types/defined? node-types/SharpenT)
+    (base-node-def/define-base-node)
     (node-base/define-node-type node-types/SharpenT
       node-properties/inputs   [channel-types/BitmapT
                                 channel-types/MatrixT]

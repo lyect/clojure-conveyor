@@ -17,9 +17,11 @@
 ;; |                     |
 ;; +---------------------+
 
-(def create ::conveyorexceptiontype-create)
+(def create                ::conveyorexceptiontype-create)
+(def get-conveyor-property ::conveyorexceptiontype-get-conveyor-property)
 
-(def ^:private type-list [create])
+(def ^:private type-list [create
+                          get-conveyor-property])
 
 ;; +----------------------+
 ;; |                      |
@@ -29,9 +31,11 @@
 
 (def different-input-output      ::conveyorexceptioncause-different-input-output)
 (def conveyor-properties-missing ::conveyorexceptioncause-conveyor-properties-missing)
+(def not-conveyor                ::conveyorexceptioncause-not-conveyor)
 
 (def ^:private cause-list [different-input-output
-                           conveyor-properties-missing])
+                           conveyor-properties-missing
+                           not-conveyor])
 
 ;; +---------------------------------------------------+
 ;; |                                                   |
@@ -39,8 +43,9 @@
 ;; |                                                   |
 ;; +---------------------------------------------------+
 
-(def ^:private types-causes-correspondence {create [different-input-output
-                                                    conveyor-properties-missing]})
+(def ^:private types-causes-correspondence {create                [different-input-output
+                                                                   conveyor-properties-missing]
+                                            get-conveyor-property [not-conveyor]})
 
 ;; +---------------------------+
 ;; |                           |

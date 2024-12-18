@@ -9,7 +9,16 @@
 ;; |                            |
 ;; +----------------------------+
 
-(def Channel ::channeltype-Channel)
+(def ChannelT ::channeltype-ChannelT)
+
+;; +-----------------------------------+
+;; |                                   |
+;; |   KEYWORDS FOR ABSTRACT CLASSES   |
+;; |                                   |
+;; +-----------------------------------+
+
+(def ImageT  ::channeltype-ImageT)
+(def NumberT ::channeltype-NumberT)
 
 ;; +-----------------------------------------------+
 ;; |                                               |
@@ -24,7 +33,7 @@
 (def IntegerT ::channeltype-Integer)
 (def MatrixT  ::channeltype-Matrix)
 
-(def types-list [Channel JpegT PngT BitmapT FloatT IntegerT MatrixT])
+(def types-list [ChannelT ImageT NumberT JpegT PngT BitmapT FloatT IntegerT MatrixT])
 
 ;; +-------------------------------------+
 ;; |                                     |
@@ -41,6 +50,6 @@
   "Check whether channel type named _channel-type-name1_ is subtype of channel type named _channel-type-name2_ or not"
   [channel-type-name1 channel-type-name2] 
   (cond (= channel-type-name1 channel-type-name2) true
-        (= channel-type-name1 Channel) false
+        (= channel-type-name1 ChannelT) false
         :else (subtype? ((channel-hierarchy/tree channel-type-name1) channel-properties/super-name)
                         channel-type-name2)))

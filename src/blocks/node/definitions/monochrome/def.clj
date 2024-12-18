@@ -15,6 +15,7 @@
 
 (defn define-monochrome-node []
   (when-not (node-types/defined? node-types/MonochromeT)
+    (base-node-def/define-base-node)
     (node-base/define-node-type node-types/MonochromeT
       node-properties/inputs   [channel-types/BitmapT]
       node-properties/outputs  [channel-types/BitmapT]

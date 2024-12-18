@@ -91,4 +91,5 @@
                        edge-properties/end-vertex-input-index    end-vertex-input-index)]
     (when-not (utils/lists-equal? edge-properties/properties-list (keys edge))
         (throw (edge-exceptions/construct edge-exceptions/create edge-exceptions/edge-properties-missing
-                                          "Not all edge-properties are added to create function")))))
+                                          "Not all edge-properties are added to create function")))
+    edge))

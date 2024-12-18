@@ -23,6 +23,7 @@
 
 (defn define-png2bitmap-node []
   (when-not (node-types/defined? node-types/Png2BitmapT)
+    (base-node-def/define-base-node)
     (node-base/define-node-type node-types/Png2BitmapT
       node-properties/inputs   [channel-types/PngT]
       node-properties/outputs  [channel-types/BitmapT]

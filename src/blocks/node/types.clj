@@ -9,7 +9,7 @@
 ;; |                            |
 ;; +----------------------------+
 
-(def Node ::nodetype-Node)
+(def NodeT ::nodetype-Node)
 
 ;; +-----------------------------------------------+
 ;; |                                               |
@@ -17,17 +17,17 @@
 ;; |                                               |
 ;; +-----------------------------------------------+
 
-(def Jpeg2BitmapT ::nodetype-Jpeg2Bitmap)
-(def Png2BitmapT  ::nodetype-Png2Bitmap)
-(def CropT        ::nodetype-Crop)
-(def MonochromeT  ::nodetype-Monochrome)
-(def InversionT   ::nodetype-Inversion)
-(def GammaT       ::nodetype-Gamma)
-(def SharpenT     ::nodetype-Sharpen)
-(def GaussT       ::nodetype-Gauss)
-(def DifferenceT  ::nodetype-difference)
+(def ConcatT       ::nodetype-Concat)
+(def CutT          ::nodetype-Cut)
+(def DenoiseT      ::nodetype-Denoise)
+(def DifferenceT   ::nodetype-Difference)
+(def GammaT        ::nodetype-Gamma)
+(def Image2BitmapT ::nodetype-ImageT2Bitmap)
+(def MeanT         ::nodetype-Mean)
+(def MonochromeT   ::nodetype-Monochrome)
+(def SharpenT      ::nodetype-Sharpen)
 
-(def types-list [Node Jpeg2BitmapT Png2BitmapT CropT MonochromeT InversionT GammaT SharpenT GaussT DifferenceT])
+(def types-list [NodeT ConcatT CutT DenoiseT DifferenceT GammaT Image2BitmapT MeanT MonochromeT SharpenT])
 
 ;; +-------------------------------------+
 ;; |                                     |
@@ -44,6 +44,6 @@
   "Check whether node type named _node-type-name1_ is subtype of node type named _node-type-name2_ or not"
   [node-type-name1 node-type-name2] 
   (cond (= node-type-name1 node-type-name2) true
-        (= node-type-name1 Node) false
+        (= node-type-name1 NodeT) false
         :else (subtype? ((node-hierarchy/tree node-type-name1) node-properties/super-name)
                         node-type-name2)))

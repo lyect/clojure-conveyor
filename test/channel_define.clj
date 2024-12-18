@@ -1,28 +1,31 @@
 (ns channel-define
-  (:require [clojure.test              :as cljtest]
-            [blocks.channel.base       :as channel-base]
-            [blocks.channel.exceptions :as channel-exceptions]
-            [blocks.channel.hierarchy  :as channel-hierarchy]
-            [blocks.channel.properties :as channel-properties]
-            [blocks.channel.types      :as channel-types]
+  (:require [clojure.test                              :as cljtest]
+            [blocks.channel.base                       :as channel-base]
+            [blocks.channel.definitions.channel.def    :as base-channel-def]
+            [blocks.channel.definitions.channel.fields :as base-channel-fields]
+            [blocks.channel.exceptions                 :as channel-exceptions]
+            [blocks.channel.hierarchy                  :as channel-hierarchy]
+            [blocks.channel.properties                 :as channel-properties]
+            [blocks.channel.types                      :as channel-types]
             [utils]))
 
 
-(intern 'blocks.channel.types 'types-list [channel-types/Channel ::TestChannel ::DerivedTestChannel])
+(intern 'blocks.channel.types 'types-list [channel-types/ChannelT ::TestChannel ::DerivedTestChannel])
 
+(dosync (base-channel-def/define-base-channel))
 
 (cljtest/deftest channel-define
   (cljtest/testing "Channel definition test"
     (channel-base/define-channel-type ::TestChannel
-                                      channel-properties/fields '(::h ::w))
+      channel-properties/fields '(::h ::w))
     (cljtest/is (channel-types/defined? ::TestChannel))
     (let [test-channel-type (channel-hierarchy/tree ::TestChannel)]
       (cljtest/is (=                  (test-channel-type channel-properties/type-name)  ::TestChannel))
-      (cljtest/is (=                  (test-channel-type channel-properties/super-name) channel-types/Channel))
-      (cljtest/is (utils/lists-equal? (test-channel-type channel-properties/fields)     '(::h ::w))))
+      (cljtest/is (=                  (test-channel-type channel-properties/super-name) channel-types/ChannelT))
+      (cljtest/is (utils/lists-equal? (test-channel-type channel-properties/fields)     (concat (list ::h ::w) base-channel-fields/fields-list))))
     (dosync (alter channel-hierarchy/tree #(dissoc % ::TestChannel)))
     (cljtest/is (and
-                 (channel-hierarchy/tree channel-types/Channel)
+                 (channel-hierarchy/tree channel-types/ChannelT)
                  (= (count @channel-hierarchy/tree) 1)))))
 
 (cljtest/deftest channel-define-derived
@@ -36,11 +39,11 @@
     (let [derived-test-channel-type (channel-hierarchy/tree ::DerivedTestChannel)]
       (cljtest/is (=                  (derived-test-channel-type channel-properties/type-name)  ::DerivedTestChannel))
       (cljtest/is (=                  (derived-test-channel-type channel-properties/super-name) ::TestChannel))
-      (cljtest/is (utils/lists-equal? (derived-test-channel-type channel-properties/fields)     '(::h ::w ::c))))
+      (cljtest/is (utils/lists-equal? (derived-test-channel-type channel-properties/fields)     (concat (list ::h ::w ::c) base-channel-fields/fields-list))))
     (dosync (alter channel-hierarchy/tree #(dissoc % ::TestChannel)))
     (dosync (alter channel-hierarchy/tree #(dissoc % ::DerivedTestChannel)))
     (cljtest/is (and
-                 (channel-hierarchy/tree channel-types/Channel)
+                 (channel-hierarchy/tree channel-types/ChannelT)
                  (= (count @channel-hierarchy/tree) 1)))))
 
 (cljtest/deftest channel-define-type-undeclared
@@ -55,7 +58,7 @@
            true
            false))))
     (cljtest/is (and
-                 (channel-hierarchy/tree channel-types/Channel)
+                 (channel-hierarchy/tree channel-types/ChannelT)
                  (= (count @channel-hierarchy/tree) 1)))))
 
 (cljtest/deftest channel-define-super-undeclared
@@ -71,7 +74,7 @@
            true
            false))))
     (cljtest/is (and
-                 (channel-hierarchy/tree channel-types/Channel)
+                 (channel-hierarchy/tree channel-types/ChannelT)
                  (= (count @channel-hierarchy/tree) 1)))))
 
 (cljtest/deftest channel-define-super-undefined
@@ -87,7 +90,7 @@
            true
            false))))
     (cljtest/is (and
-                 (channel-hierarchy/tree channel-types/Channel)
+                 (channel-hierarchy/tree channel-types/ChannelT)
                  (= (count @channel-hierarchy/tree) 1)))))
 
 (cljtest/deftest channel-define-duplicated-fields
@@ -102,7 +105,7 @@
            true
            false))))
     (cljtest/is (and
-                 (channel-hierarchy/tree channel-types/Channel)
+                 (channel-hierarchy/tree channel-types/ChannelT)
                  (= (count @channel-hierarchy/tree) 1)))))
 
 (cljtest/deftest channel-define-super-intersected-fields
@@ -121,7 +124,7 @@
            false))))
     (dosync (alter channel-hierarchy/tree #(dissoc % ::TestChannel)))
     (cljtest/is (and
-                 (channel-hierarchy/tree channel-types/Channel)
+                 (channel-hierarchy/tree channel-types/ChannelT)
                  (= (count @channel-hierarchy/tree) 1)))))
 
 (cljtest/deftest channel-redefine
@@ -139,7 +142,7 @@
            false))))
     (dosync (alter channel-hierarchy/tree #(dissoc % ::TestChannel)))
     (cljtest/is (and
-                 (channel-hierarchy/tree channel-types/Channel)
+                 (channel-hierarchy/tree channel-types/ChannelT)
                  (= (count @channel-hierarchy/tree) 1)))))
 
 

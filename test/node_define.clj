@@ -1,19 +1,24 @@
 (ns node-define
-  (:require [clojure.test              :as cljtest]
-            [blocks.channel.base       :as channel-base]
-            [blocks.channel.properties :as channel-properties]
-            [blocks.channel.types      :as channel-types]
-            [blocks.node.base          :as node-base]
-            [blocks.node.exceptions    :as node-exceptions]
-            [blocks.node.hierarchy     :as node-hierarchy]
-            [blocks.node.properties    :as node-properties]
-            [blocks.node.types         :as node-types]
+  (:require [clojure.test                           :as cljtest]
+            [blocks.channel.base                    :as channel-base]
+            [blocks.channel.definitions.channel.def :as base-channel-def]
+            [blocks.channel.properties              :as channel-properties]
+            [blocks.channel.types                   :as channel-types]
+            [blocks.node.base                       :as node-base]
+            [blocks.node.definitions.node.def       :as base-node-def]
+            [blocks.node.definitions.node.fields    :as base-node-fields]
+            [blocks.node.exceptions                 :as node-exceptions]
+            [blocks.node.hierarchy                  :as node-hierarchy]
+            [blocks.node.properties                 :as node-properties]
+            [blocks.node.types                      :as node-types]
             [utils]))
 
 
-(intern 'blocks.channel.types 'types-list [channel-types/Channel ::TestChannel1 ::TestChannel2 ::TestChannel3])
-(intern 'blocks.node.types    'types-list [node-types/Node ::TestNode ::DerivedTestNode])
+(intern 'blocks.channel.types 'types-list [channel-types/ChannelT ::TestChannel1 ::TestChannel2 ::TestChannel3])
+(intern 'blocks.node.types    'types-list [node-types/NodeT ::TestNode ::DerivedTestNode])
 
+(dosync (base-channel-def/define-base-channel))
+(dosync (base-node-def/define-base-node))
 
 (channel-base/define-channel-type ::TestChannel1
                                   channel-properties/fields '(::h ::w))
@@ -34,13 +39,13 @@
     (cljtest/is (node-types/defined? ::TestNode))
     (let [test-node-type (node-hierarchy/tree ::TestNode)]
       (cljtest/is (=                  (test-node-type node-properties/type-name)  ::TestNode))
-      (cljtest/is (=                  (test-node-type node-properties/super-name) node-types/Node))
+      (cljtest/is (=                  (test-node-type node-properties/super-name) node-types/NodeT))
       (cljtest/is (utils/lists-equal? (test-node-type node-properties/inputs)     (list ::TestChannel1 ::TestChannel2)))
       (cljtest/is (utils/lists-equal? (test-node-type node-properties/outputs)    (list ::TestChannel3)))
-      (cljtest/is (utils/lists-equal? (test-node-type node-properties/fields)     (list ::f1 ::f2 ::f3 node-base/node-name))))
+      (cljtest/is (utils/lists-equal? (test-node-type node-properties/fields)     (concat (list ::f1 ::f2 ::f3) base-node-fields/fields-list))))
     (dosync (alter node-hierarchy/tree #(dissoc % ::TestNode)))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-derived
@@ -62,11 +67,11 @@
       (cljtest/is (=                  (derived-test-node-type node-properties/super-name) ::TestNode))
       (cljtest/is (utils/lists-equal? (derived-test-node-type node-properties/inputs)     (list ::TestChannel3 ::TestChannel3)))
       (cljtest/is (utils/lists-equal? (derived-test-node-type node-properties/outputs)    (list ::TestChannel1 ::TestChannel2)))
-      (cljtest/is (utils/lists-equal? (derived-test-node-type node-properties/fields)     (list ::f1 ::f2 ::f3 ::f4 node-base/node-name))))
+      (cljtest/is (utils/lists-equal? (derived-test-node-type node-properties/fields)     (concat (list ::f1 ::f2 ::f3 ::f4) base-node-fields/fields-list))))
     (dosync (alter node-hierarchy/tree #(dissoc % ::TestNode)))
     (dosync (alter node-hierarchy/tree #(dissoc % ::DerivedTestNode)))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-type-undeclared
@@ -84,7 +89,7 @@
            true
            false))))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-super-undeclared
@@ -103,7 +108,7 @@
            true
            false))))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-super-undefined
@@ -122,7 +127,7 @@
            true
            false))))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-duplicated-fields
@@ -140,7 +145,7 @@
            true
            false))))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-super-intersected-fields
@@ -165,7 +170,7 @@
            false))))
     (dosync (alter node-hierarchy/tree #(dissoc % ::TestNode)))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-inputs-undefined
@@ -182,7 +187,7 @@
            true
            false))))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-outputs-undefined
@@ -199,7 +204,7 @@
            true
            false))))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-function-undefined
@@ -216,7 +221,7 @@
            true
            false))))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-redefine
@@ -241,7 +246,7 @@
            false))))
     (dosync (alter node-hierarchy/tree #(dissoc % ::TestNode)))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-unvalidated-inputs
@@ -259,7 +264,7 @@
            true
            false))))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-unvalidated-outputs
@@ -277,7 +282,7 @@
            true
            false))))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 (cljtest/deftest node-define-unvalidated-function
@@ -295,7 +300,7 @@
            true
            false))))
     (cljtest/is (and
-                 (node-hierarchy/tree node-types/Node)
+                 (node-hierarchy/tree node-types/NodeT)
                  (= (count @node-hierarchy/tree) 1)))))
 
 

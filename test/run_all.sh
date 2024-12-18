@@ -5,4 +5,4 @@ clj -M $SCRIPTPATH/channel_define.clj
 clj -M $SCRIPTPATH/channel_create.clj
 clj -M $SCRIPTPATH/node_define.clj
 clj -M $SCRIPTPATH/node_create.clj
-#clj -M $SCRIPTPATH/conveyor_build.clj
+#clj -M $SCRIPTPATH/conveyor_create.clj

@@ -1,31 +1,34 @@
 (ns channel-create
-  (:require [clojure.test              :as cljtest]
-            [blocks.channel.base       :as channel-base]
-            [blocks.channel.exceptions :as channel-exceptions]
-            [blocks.channel.methods    :as channel-methods]
-            [blocks.channel.properties :as channel-properties]
-            [blocks.channel.types      :as channel-types]
+  (:require [clojure.test                           :as cljtest]
+            [blocks.channel.base                    :as channel-base]
+            [blocks.channel.definitions.channel.def :as base-channel-def]
+            [blocks.channel.exceptions              :as channel-exceptions]
+            [blocks.channel.methods                 :as channel-methods]
+            [blocks.channel.properties              :as channel-properties]
+            [blocks.channel.types                   :as channel-types]
             [utils]))
 
 
-(intern 'blocks.channel.types 'types-list [channel-types/Channel ::TestChannel1 ::TestChannel2 ::TestChannel3 ::UndefinedChannel])
+(intern 'blocks.channel.types 'types-list [channel-types/ChannelT ::TestChannel1 ::TestChannel2 ::TestChannel3 ::UndefinedChannel])
 
+(dosync
+ (base-channel-def/define-base-channel)
 
-(channel-base/define-channel-type ::TestChannel1
-                                  channel-properties/fields '(::h ::w))
-(channel-base/define-channel-type ::TestChannel2
-                                  channel-properties/fields '(::x ::y))
-(channel-base/define-channel-type ::TestChannel3
-                                  channel-properties/super-name ::TestChannel1
-                                  channel-properties/fields     '(::c))
+ (channel-base/define-channel-type ::TestChannel1
+                                   channel-properties/fields '(::h ::w))
+ (channel-base/define-channel-type ::TestChannel2
+                                   channel-properties/fields '(::x ::y))
+ (channel-base/define-channel-type ::TestChannel3
+                                   channel-properties/super-name ::TestChannel1
+                                   channel-properties/fields     '(::c)))
 
 
 (cljtest/deftest channel-creation
   (cljtest/testing "Channel creation test"
     (let [test-channel (dosync (channel-methods/create ::TestChannel1 ::h 1 ::w 2))]
       (cljtest/is (=                  (channel-methods/get-channel-type-name  test-channel) ::TestChannel1))
-      (cljtest/is (=                  (channel-methods/get-channel-super-name test-channel) channel-types/Channel))
-      (cljtest/is (utils/lists-equal? (channel-methods/get-channel-fields     test-channel) '(::h ::w)))
+      (cljtest/is (=                  (channel-methods/get-channel-super-name test-channel) channel-types/ChannelT))
+      (cljtest/is (utils/lists-equal? (channel-methods/get-channel-fields     test-channel) (list ::h ::w)))
 
       (cljtest/is (= (channel-methods/get-channel-field test-channel ::h) 1))
       (cljtest/is (= (channel-methods/get-channel-field test-channel ::w) 2)))))
@@ -35,7 +38,7 @@
     (let [derived-test-channel (dosync (channel-methods/create ::TestChannel3 ::h 1 ::w 2 ::c 3))]
       (cljtest/is (=                  (channel-methods/get-channel-type-name  derived-test-channel) ::TestChannel3))
       (cljtest/is (=                  (channel-methods/get-channel-super-name derived-test-channel) ::TestChannel1))
-      (cljtest/is (utils/lists-equal? (channel-methods/get-channel-fields     derived-test-channel) '(::h ::w ::c)))
+      (cljtest/is (utils/lists-equal? (channel-methods/get-channel-fields     derived-test-channel) (list ::h ::w ::c)))
 
       (cljtest/is (= (channel-methods/get-channel-field derived-test-channel ::h) 1))
       (cljtest/is (= (channel-methods/get-channel-field derived-test-channel ::w) 2)))))
@@ -66,7 +69,7 @@
   (cljtest/testing "Abstract channel creation test"
     (cljtest/is
      (try
-       (dosync (channel-methods/create channel-types/Channel))
+       (dosync (channel-methods/create channel-types/ChannelT))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= channel-exceptions/create            (-> e ex-data channel-exceptions/type-keyword))
                   (= channel-exceptions/abstract-creation (-> e ex-data channel-exceptions/cause-keyword)))

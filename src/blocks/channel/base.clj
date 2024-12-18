@@ -6,26 +6,11 @@
             [blocks.channel.types      :as channel-types]
             [utils]))
 
-
-;; +-------------------------+
-;; |                         |
-;; |   CHANNEL BASE FIELDS   |
-;; |                         |
-;; +-------------------------+
-
-(def type-name ::channelfield-type-name)
-
 ;; +---------------------------------------------+
 ;; |                                             |
 ;; |   CHANNEL TYPE DEFINING RELATED FUNCTIONS   |
 ;; |                                             |
 ;; +---------------------------------------------+
-
-; Alters hierarchy tree with Channel (base type for all the channel types) only once
-(dosync (when-not (channel-hierarchy/tree channel-types/Channel)
-         (alter channel-hierarchy/tree #(assoc % channel-types/Channel {channel-properties/type-name  channel-types/Channel
-                                                                        channel-properties/super-name nil
-                                                                        channel-properties/fields     ()}))))
 
 (defn append-channel-hierarchy
   "Alter tree hierarchy with _new-channel-type_ if not defined and super is defined"
@@ -40,7 +25,7 @@
   "Define a channel with _new-channel-type-name_ and _properties_"
   [new-channel-type-name & properties]
   `(let [properties-map#      (hash-map ~@properties)
-         super-name#          (or (properties-map# channel-properties/super-name) channel-types/Channel)]
+         super-name#          (or (properties-map# channel-properties/super-name) channel-types/ChannelT)]
      (when-not (utils/in-list? channel-types/types-list ~new-channel-type-name)
         (throw (channel-exceptions/construct channel-exceptions/define-channel-type channel-exceptions/type-undeclared
                                              (str "Type named \"" ~new-channel-type-name "\" is undeclared"))))

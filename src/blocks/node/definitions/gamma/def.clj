@@ -15,6 +15,7 @@
 
 (defn define-gamma-node []
   (when-not (node-types/defined? node-types/GammaT)
+    (base-node-def/define-base-node)
     (node-base/define-node-type node-types/GammaT
       node-properties/inputs   [channel-types/BitmapT
                                 channel-types/FloatT]

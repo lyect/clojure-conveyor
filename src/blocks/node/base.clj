@@ -1,22 +1,11 @@
 (ns blocks.node.base
-  (:require [clojure.set            :as cljset]
-            [blocks.channel.types   :as channel-types]
-            [blocks.node.exceptions :as node-exceptions]
-            [blocks.node.hierarchy  :as node-hierarchy]
-            [blocks.node.properties :as node-properties]
-            [blocks.node.types      :as node-types]
-            [utils]
-            [blocks.node.base :as node-base]))
-
-
-;; +-------------------------+
-;; |                         |
-;; |   CHANNEL BASE FIELDS   |
-;; |                         |
-;; +-------------------------+
-
-(def type-name ::nodefield-type-name)
-(def node-name ::nodefield-name)
+  (:require [clojure.set                         :as cljset]
+            [blocks.channel.types                :as channel-types]
+            [blocks.node.exceptions              :as node-exceptions]
+            [blocks.node.hierarchy               :as node-hierarchy]
+            [blocks.node.properties              :as node-properties]
+            [blocks.node.types                   :as node-types]
+            [utils]))
 
 ;; +---------------------+
 ;; |                     |
@@ -45,15 +34,6 @@
 ;; |                                          |
 ;; +------------------------------------------+
 
-; Alters hierarchy tree with Node (base type for all the node types) only once
-(dosync (when-not (node-hierarchy/tree node-types/Node)
-          (alter node-hierarchy/tree #(assoc % node-types/Node {node-properties/type-name  node-types/Node
-                                                                node-properties/super-name nil
-                                                                node-properties/inputs     nil
-                                                                node-properties/outputs    nil
-                                                                node-properties/function   nil
-                                                                node-properties/fields     (list node-name)}))))
-
 (defn append-node-hierarchy
   "Alter tree hierarchy with _new-node-type_ if not defined and super is defined"
   [new-node-type]
@@ -70,13 +50,13 @@
     (when-not (validate-function (new-node-type node-properties/function))
       (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/function-unvalidated
                                         (str "Function of type named \"" new-node-type-name " is unvalidated"))))
-    (dosync (alter node-hierarchy/tree #(assoc % new-node-type-name new-node-type)))))
+    (alter node-hierarchy/tree #(assoc % new-node-type-name new-node-type))))
 
 (defmacro define-node-type
   "Define a node with _type-name_ and _properties_"
   [new-node-type-name & properties]
   `(let [properties-map# (hash-map ~@properties)
-         super-name#     (or (properties-map# node-properties/super-name) node-types/Node)]
+         super-name#     (or (properties-map# node-properties/super-name) node-types/NodeT)]
      (when-not (utils/in-list? node-types/types-list ~new-node-type-name)
        (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/type-undeclared
                                          (str "Type with name \"" ~new-node-type-name "\" is not declared"))))
@@ -99,21 +79,29 @@
                                            (str "Fields of type named \"" ~new-node-type-name "\" intersect with fields of super type named \"" super-name# "\""))))
        (when-not (or (properties-map# node-properties/inputs) (super# node-properties/inputs))
          (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/inputs-undefined
-                                           (str "Inputs of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined inputs)"))))
+                                           (str "Inputs of type named \"" ~new-node-type-name "\" are undefined (neither type nor super have defined inputs)"))))
        (when-not (or (properties-map# node-properties/outputs) (super# node-properties/outputs))
          (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/outputs-undefined
-                                           (str "Outputs of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined outputs)"))))
+                                           (str "Outputs of type named \"" ~new-node-type-name "\" are undefined (neither type nor super have defined outputs)"))))
        (when-not (or (properties-map# node-properties/function) (super# node-properties/function))
          (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/function-undefined
                                            (str "Function of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined function)"))))
+       (when-not (or (properties-map# node-properties/ready-validator) (super# node-properties/ready-validator))
+         (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/ready-validator-undefined
+                                           (str "Ready validator of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined ready validator)"))))
+       (when-not (or (properties-map# node-properties/inputs-validator) (super# node-properties/inputs-validator))
+         (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/inputs-validator-undefined
+                                           (str "Inputs validator of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined inputs validator)"))))
        (append-node-hierarchy {node-properties/type-name  ~new-node-type-name
                                node-properties/super-name super-name#
-                               node-properties/inputs     (or     (properties-map# node-properties/inputs)   (super# node-properties/inputs))
-                               node-properties/outputs    (or     (properties-map# node-properties/outputs)  (super# node-properties/outputs))
-                               node-properties/function   (or     (properties-map# node-properties/function) (super# node-properties/function))
-                               node-properties/fields     (concat new-type-fields# super-fields#)})
+                               node-properties/inputs           (or     (properties-map# node-properties/inputs)           (super# node-properties/inputs))
+                               node-properties/outputs          (or     (properties-map# node-properties/outputs)          (super# node-properties/outputs))
+                               node-properties/function         (or     (properties-map# node-properties/function)         (super# node-properties/function))
+                               node-properties/ready-validator  (or     (properties-map# node-properties/ready-validator)  (super# node-properties/ready-validator))
+                               node-properties/inputs-validator (or     (properties-map# node-properties/inputs-validator) (super# node-properties/inputs-validator))
+                               node-properties/fields           (concat new-type-fields# super-fields#)})
        (when-not (utils/lists-equal? node-properties/properties-list (keys (node-hierarchy/tree ~new-node-type-name)))
          (do
-           (dosync (alter node-hierarchy/tree #(dissoc % ~new-node-type-name)))
+           (alter node-hierarchy/tree #(dissoc % ~new-node-type-name))
            (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/node-properties-missing
                                              "Not all node-properties are added to define-node-type macro")))))))

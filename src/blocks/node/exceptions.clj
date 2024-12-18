@@ -8,8 +8,8 @@
 ;; |                             |
 ;; +-----------------------------+
 
-(def type-keyword  ::nodeexceptionkeyword-type-keyword)
-(def cause-keyword ::nodeexceptionkeyword-cause-keyword)
+(def type-keyword  ::keyword-type-keyword)
+(def cause-keyword ::keyword-cause-keyword)
 
 ;; +---------------------+
 ;; |                     |
@@ -17,18 +17,20 @@
 ;; |                     |
 ;; +---------------------+
 
-(def define-node-type  ::nodeexceptiontype-define-node-type)
-(def create            ::nodeexceptiontype-create)
-(def get-node-property ::nodeexceptiontype-get-node-property)
-(def get-node-field    ::nodeexceptiontype-get-node-field)
-(def get-node-name     ::nodeexceptiontype-get-node-name)
-(def execute           ::nodeexceptiontype-execute)
+(def define-node-type  ::type-define-node-type)
+(def create            ::type-create)
+(def get-node-property ::type-get-node-property)
+(def get-node-field    ::type-get-node-field)
+(def get-node-name     ::type-get-node-name)
+(def store             ::type-store)
+(def execute           ::type-execute)
 
 (def ^:private type-list [define-node-type
                           create
                           get-node-property
                           get-node-field
                           get-node-name
+                          store
                           execute])
 
 ;; +----------------------+
@@ -37,29 +39,28 @@
 ;; |                      |
 ;; +----------------------+
 
-(def duplicating-fields        ::nodeexceptioncause-duplicating-fields)
-(def super-fields-intersection ::nodeexceptioncause-super-fields-intersection)
-(def node-properties-missing   ::nodeexceptioncause-node-properties-missing)
-(def missing-fields            ::nodeexceptioncause-missing-fields)
-(def excess-fields             ::nodeexceptioncause-excess-fields)
-(def type-undeclared           ::nodeexceptioncause-type-undeclared)
-(def type-defined              ::nodeexceptioncause-type-defined)
-(def super-undeclared          ::nodeexceptioncause-super-undeclared)
-(def super-undefined           ::nodeexceptioncause-super-undefined)
-(def inputs-unvalidated        ::nodeexceptioncause-inputs-unvalidated)
-(def outputs-unvalidated       ::nodeexceptioncause-outputs-unvalidated)
-(def function-unvalidated      ::nodeexceptioncause-function-unvalidated)
-(def not-node                  ::nodeexceptioncause-not-node)
-(def type-undefined            ::nodeexceptioncause-type-undefined)
-(def unknown-field             ::nodeexceptioncause-unknown-field)
-(def abstract-creation         ::nodeexceptioncause-abstract-creation)
-(def input-not-channel         ::nodeexceptioncause-input-not-channel)
-(def input-different-type      ::nodeexceptioncause-input-different-type)
-(def output-not-channel        ::nodeexceptioncause-output-not-channel)
-(def output-different-type     ::nodeexceptioncause-output-different-type)
-(def function-undefined        ::nodeexceptioncause-function-undefined)
-(def inputs-undefined          ::nodeexceptioncause-inputs-undefined)
-(def outputs-undefined         ::nodeexceptioncause-outputs-undefined)
+(def duplicating-fields         ::cause-duplicating-fields)
+(def super-fields-intersection  ::cause-super-fields-intersection)
+(def node-properties-missing    ::cause-node-properties-missing)
+(def missing-fields             ::cause-missing-fields)
+(def excess-fields              ::cause-excess-fields)
+(def type-undeclared            ::cause-type-undeclared)
+(def type-defined               ::cause-type-defined)
+(def super-undeclared           ::cause-super-undeclared)
+(def super-undefined            ::cause-super-undefined)
+(def inputs-unvalidated         ::cause-inputs-unvalidated)
+(def outputs-unvalidated        ::cause-outputs-unvalidated)
+(def function-unvalidated       ::cause-function-unvalidated)
+(def not-node                   ::cause-not-node)
+(def type-undefined             ::cause-type-undefined)
+(def unknown-field              ::cause-unknown-field)
+(def abstract-creation          ::cause-abstract-creation)
+(def function-undefined         ::cause-function-undefined)
+(def ready-validator-undefined  ::cause-ready-validator-undefined)
+(def inputs-validator-undefined ::cause-inputs-validator-undefined)
+(def inputs-undefined           ::cause-inputs-undefined)
+(def outputs-undefined          ::cause-outputs-undefined)
+(def no-buffer-under-index      ::cause-no-buffer-under-index)
 
 (def ^:private cause-list [duplicating-fields
                            super-fields-intersection
@@ -77,13 +78,12 @@
                            type-undefined
                            unknown-field
                            abstract-creation
-                           input-not-channel
-                           input-different-type
-                           output-not-channel
-                           output-different-type
                            function-undefined
+                           ready-validator-undefined
+                           inputs-validator-undefined
                            inputs-undefined
-                           outputs-undefined])
+                           outputs-undefined
+                           no-buffer-under-index])
 
 ;; +---------------------------------------------------+
 ;; |                                                   |
@@ -102,6 +102,8 @@
                                                               outputs-unvalidated
                                                               function-unvalidated
                                                               function-undefined
+                                                              ready-validator-undefined
+                                                              inputs-validator-undefined
                                                               inputs-undefined
                                                               outputs-undefined]
                                             create           [duplicating-fields
@@ -114,11 +116,9 @@
                                             get-node-field    [not-node
                                                                unknown-field]
                                             get-node-name     [not-node]
-                                            execute           [not-node
-                                                               input-not-channel
-                                                               input-different-type
-                                                               output-not-channel
-                                                               output-different-type]})
+                                            store             [not-node
+                                                               no-buffer-under-index]
+                                            execute           [inputs-unvalidated]})
 
 ;; +---------------------------+
 ;; |                           |

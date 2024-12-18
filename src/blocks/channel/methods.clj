@@ -1,10 +1,10 @@
 (ns blocks.channel.methods
-  (:require [clojure.set               :as cljset]
-            [blocks.channel.base       :as channel-base]
-            [blocks.channel.exceptions :as channel-exceptions]
-            [blocks.channel.hierarchy  :as channel-hierarchy]
-            [blocks.channel.properties :as channel-properties]
-            [blocks.channel.types      :as channel-types]
+  (:require [clojure.set                               :as cljset]
+            [blocks.channel.definitions.channel.fields :as base-channel-fields]
+            [blocks.channel.exceptions                 :as channel-exceptions]
+            [blocks.channel.hierarchy                  :as channel-hierarchy]
+            [blocks.channel.properties                 :as channel-properties]
+            [blocks.channel.types                      :as channel-types]
             [utils]))
 
 
@@ -16,13 +16,14 @@
 
 (defn channel?
   "Predicate to check whether _obj_ is channel or not"
-  [obj]
-  (and (some? obj)
-       (map? obj)
-       (contains? obj channel-base/type-name)
-       (channel-types/defined? (obj channel-base/type-name))
-       (utils/lists-equal? (keys (dissoc obj channel-base/type-name))
-                           ((channel-hierarchy/tree (obj channel-base/type-name)) channel-properties/fields))))
+  [obj-ref]
+  (and (some? @obj-ref)
+       (map? @obj-ref)
+       (obj-ref base-channel-fields/type-name)
+       (channel-types/defined? (obj-ref base-channel-fields/type-name))
+       (utils/lists-equal? (remove #{base-channel-fields/type-name} (keys @obj-ref))
+                           (remove #{base-channel-fields/type-name}
+                                   ((channel-hierarchy/tree (obj-ref base-channel-fields/type-name)) channel-properties/fields)))))
 
 ;; +-------------------------------------------+
 ;; |                                           |
@@ -34,17 +35,17 @@
 ;; hence it is used only for specific properties
 (defn- get-channel-property
   "Get _property_ of _channel_"
-  [channel property]
-  (when-not (channel? channel)
+  [channel-ref property]
+  (when-not (channel? channel-ref)
     (throw (channel-exceptions/construct channel-exceptions/get-channel-property channel-exceptions/not-channel
-                                         (str "\"" channel "\" is not a channel"))))
-  ((channel-hierarchy/tree (channel channel-base/type-name)) property))
+                                         (str "\"" channel-ref "\" is not a channel"))))
+  ((channel-hierarchy/tree (channel-ref base-channel-fields/type-name)) property))
 
 ;; No need to check whether "channel" is a correct channel or not
 ;; It will be done inside "get-channel-property"
-(defn get-channel-type-name  [channel] (get-channel-property channel channel-properties/type-name))
-(defn get-channel-super-name [channel] (get-channel-property channel channel-properties/super-name))
-(defn get-channel-fields     [channel] (get-channel-property channel channel-properties/fields))
+(defn get-channel-type-name  [channel-ref] (get-channel-property channel-ref channel-properties/type-name))
+(defn get-channel-super-name [channel-ref] (get-channel-property channel-ref channel-properties/super-name))
+(defn get-channel-fields     [channel-ref] (remove (set base-channel-fields/fields-list) (get-channel-property channel-ref channel-properties/fields)))
 
 ;; +------------------------------------+
 ;; |                                    |
@@ -54,14 +55,16 @@
 
 (defn get-channel-field
   "Get field's value of _channel_ by _field-name_"
-  [channel field-name]
-  (when-not (channel? channel)
+  [channel-ref field-name]
+  (when-not (channel? channel-ref)
     (throw (channel-exceptions/construct channel-exceptions/get-channel-field channel-exceptions/not-channel
-                                         (str "\"" channel "\" is not a channel"))))
-  (when-not (channel field-name)
-    (throw (channel-exceptions/construct channel-exceptions/get-channel-field channel-exceptions/unknown-field
-                                         (str "\"" channel "\" has no field named \"" field-name "\""))))
-  (channel field-name))
+                                         (str "\"" channel-ref "\" is not a channel"))))
+  ; ChannelT fields protection
+  (let [protected-channel (apply dissoc @channel-ref base-channel-fields/fields-list)]
+    (when-not (protected-channel field-name)
+      (throw (channel-exceptions/construct channel-exceptions/get-channel-field channel-exceptions/unknown-field
+                                           (str "\"" channel-ref "\" has no field named \"" field-name "\""))))
+    (protected-channel field-name)))
 
 ;; +-------------------------+
 ;; |                         |
@@ -79,15 +82,17 @@
   (when-not (channel-types/defined? channel-type-name)
     (throw (channel-exceptions/construct channel-exceptions/create channel-exceptions/type-undefined
                                           (str "Type named \"" channel-type-name "\" is undefined"))))
-  (when (= channel-type-name channel-types/Channel)
+  (when (or (= channel-type-name channel-types/ChannelT)
+            (= channel-type-name channel-types/ImageT)
+            (= channel-type-name channel-types/NumberT))
     (throw (channel-exceptions/construct channel-exceptions/create channel-exceptions/abstract-creation
                                          (str "Unable to instantiate abstract channel"))))
   (let [fields-map              (apply hash-map fields)
         channel-fields          (keys fields-map)
-        channel-type-fields     ((channel-hierarchy/tree channel-type-name) channel-properties/fields)
+        channel-type-fields     (remove (set base-channel-fields/fields-list) ((channel-hierarchy/tree channel-type-name) channel-properties/fields))
         channel-fields-set      (set channel-fields)
         channel-type-fields-set (set channel-type-fields)
-        channel                 (ref {})]
+        channel-ref             (ref {})]
     (when (> (count (take-nth 2 fields)) (count channel-fields-set))
       (throw (channel-exceptions/construct channel-exceptions/create channel-exceptions/duplicating-fields
                                            (str "Tried to create " channel-type-name " with duplicated fields"))))
@@ -98,5 +103,6 @@
       (throw (channel-exceptions/construct channel-exceptions/create channel-exceptions/excess-fields
                                            (str "Tried to create " channel-type-name " with excess fields"))))
     (doseq [fields-map-entry fields-map]
-      (alter channel #(assoc % (first fields-map-entry) (second fields-map-entry))))
-    (alter channel #(assoc % channel-base/type-name channel-type-name))))
+      (alter channel-ref #(assoc % (first fields-map-entry) (second fields-map-entry))))
+    (alter channel-ref #(assoc % base-channel-fields/type-name channel-type-name))
+    channel-ref))

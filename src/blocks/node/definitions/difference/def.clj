@@ -24,6 +24,7 @@
 
 (defn define-difference-node []
   (when-not (node-types/defined? node-types/DifferenceT)
+    (base-node-def/define-base-node)
     (node-base/define-node-type node-types/DifferenceT
       node-properties/inputs   [channel-types/BitmapT
                                 channel-types/BitmapT]
