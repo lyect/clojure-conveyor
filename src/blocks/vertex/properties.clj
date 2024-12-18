@@ -1,9 +1,10 @@
 (ns blocks.vertex.properties)
 
 
-(def node                 ::vertexproperty-node)
-(def inputs               ::vertexproperty-inputs)
-(def inputs-connectivity  ::vertexproperty-inputs-connectivity)
-(def outputs-connectivity ::vertexproperty-outputs-connectivity)
+(def node                 ::property-node)
+(def inputs               ::property-inputs)
+(def outputs              ::property-outputs)
+(def inputs-connectivity  ::property-inputs-connectivity)
+(def outputs-connectivity ::property-outputs-connectivity)
 
 (def properties-list [node inputs inputs-connectivity outputs-connectivity])

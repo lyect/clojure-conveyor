@@ -139,16 +139,14 @@
   (when-not (node? node-ref)
     (throw (node-exceptions/construct node-exceptions/store node-exceptions/not-node
                                       (str "\"" node-ref "\" is not a node"))))
-  (dosync
-   (alter (get-input-buffer-ref node-ref input-index) #(into % value))))
+  (alter (get-input-buffer-ref node-ref input-index) #(into % value)))
 
 (defn execute
   [node-ref]
   (let [ready-validator  (get-node-ready-validator node-ref)
         inputs-validator (get-node-inputs-validator node-ref)]
-    (dosync
-     (while (ready-validator node-ref)
-       (when-not (inputs-validator node-ref)
-         (throw (node-exceptions/construct node-exceptions/execute node-exceptions/inputs-unvalidated
-                                           (str "Inputs of \"" node-ref "\" are invalidated"))))
-       ((get-node-function node-ref) node-ref)))))
+    (while (ready-validator node-ref)
+      (when-not (inputs-validator node-ref)
+        (throw (node-exceptions/construct node-exceptions/execute node-exceptions/inputs-unvalidated
+                                          (str "Inputs of \"" node-ref "\" are invalidated"))))
+      ((get-node-function node-ref) node-ref))))

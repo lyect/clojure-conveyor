@@ -1,8 +1,9 @@
 (ns blocks.vertex.methods
-  (:require [blocks.node.methods      :as node-methods]
-            [blocks.vertex.exceptions :as vertex-exceptions]
-            [blocks.vertex.properties :as vertex-properties]
-            [clojure.core.async       :as a]
+  (:require [blocks.node.methods      :as    node-methods]
+            [blocks.vertex.exceptions :as    vertex-exceptions]
+            [blocks.vertex.properties :as    vertex-properties]
+            [clojure.core.async       :as    a
+                                      :refer [>!]]
             [utils]))
 
 
@@ -53,6 +54,12 @@
   (into [] (repeat (count (node-methods/get-node-inputs node-ref)) a/chan)))
 
 ;; No need to check whether "node" is correct node or not, since it is evaluated within "create" function
+(defn- initialize-outputs
+  "Get async channel for each _node_'s input"
+  [node-ref]
+  (into [] (repeat (count (node-methods/get-node-outputs node-ref)) a/chan)))
+
+;; No need to check whether "node" is correct node or not, since it is evaluated within "create" function
 (defn- initialize-inputs-connectivity
   "Get connectivity status for each _node_'s input"
   [node-ref]
@@ -73,6 +80,7 @@
   (let [vertex-ref (ref {})]
     (alter vertex-ref #(assoc % vertex-properties/node                 node-ref))
     (alter vertex-ref #(assoc % vertex-properties/inputs               (initialize-inputs  node-ref)))
+    (alter vertex-ref #(assoc % vertex-properties/outputs              (initialize-outputs node-ref)))
     (alter vertex-ref #(assoc % vertex-properties/inputs-connectivity  (initialize-inputs-connectivity  node-ref)))
     (alter vertex-ref #(assoc % vertex-properties/outputs-connectivity (initialize-outputs-connectivity node-ref)))
     (when-not (utils/lists-equal? vertex-properties/properties-list (keys @vertex-ref))
@@ -219,15 +227,19 @@
   (a/go (while true
           (let [[value ch]  (a/alts! (vertex-ref vertex-properties/inputs))
                 input-index (.indexOf (vertex-ref vertex-properties/inputs) ch)]
-            (when (nil? input-index)
+            (when (= input-index -1)
               (throw (vertex-exceptions/construct vertex-exceptions/run vertex-exceptions/unknown-channel
                                                   (str "Got value \"" value "\" from unknown channel \"" ch "\""))))
             (let [node-ref (get-vertex-node vertex-ref)]
-              (node-methods/store   node-ref input-index value)
-              (node-methods/execute node-ref)
-              (while ))
-              (let [output (node-methods/store-execute (get-vertex-node vertex-ref) input-index value)]
-                (when output))))))
+              (dosync
+               (node-methods/store   node-ref input-index value)
+               (node-methods/execute node-ref)
+               (doseq [output-index (range (count (node-methods/get-node-outputs node-ref)))]
+                 (let [output (get (vertex-ref vertex-properties/outputs) output-index)]
+                   (doseq [output-value (->> (node-methods/flush-output node-ref output-index)
+                                             (list)
+                                             (flatten))]
+                     (>! output output-value))))))))))
 
 (defn start
   "Start async task for vertex"

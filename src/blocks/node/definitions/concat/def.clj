@@ -32,5 +32,5 @@
     (node-base/define-node-type node-types/ConcatT
       node-properties/inputs   [channel-types/ImageT]
       node-properties/outputs  [channel-types/ImageT]
-      node-properties/function concat-node-function
+                                                 node-properties/function concat-node-function
       node-properties/fields   concat-node-fields/fields-list)))
