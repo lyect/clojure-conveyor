@@ -1,6 +1,6 @@
 (ns blocks.node.definitions.concat.fields)
 
 
-(def n ::concatnodefield-n)
+(def n ::field-n)
 
 (def fields-list [n])

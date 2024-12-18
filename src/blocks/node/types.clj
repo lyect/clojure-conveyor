@@ -22,12 +22,11 @@
 (def DenoiseT      ::nodetype-Denoise)
 (def DifferenceT   ::nodetype-Difference)
 (def GammaT        ::nodetype-Gamma)
-(def Image2BitmapT ::nodetype-ImageT2Bitmap)
-(def MeanT         ::nodetype-Mean)
-(def MonochromeT   ::nodetype-Monochrome)
+(def Image2BitmapT ::nodetype-Image2Bitmap)
+(def RGBSplitT     ::nodetype-RGBSplit)
 (def SharpenT      ::nodetype-Sharpen)
 
-(def types-list [NodeT ConcatT CutT DenoiseT DifferenceT GammaT Image2BitmapT MeanT MonochromeT SharpenT])
+(def types-list [NodeT ConcatT CutT DenoiseT DifferenceT GammaT Image2BitmapT RGBSplitT SharpenT])
 
 ;; +-------------------------------------+
 ;; |                                     |

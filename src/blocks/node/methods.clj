@@ -116,8 +116,8 @@
       (alter node-ref #(assoc % (first fields-map-entry) (second fields-map-entry))))
     (alter node-ref #(assoc % base-node-fields/node-name      node-name))
     (alter node-ref #(assoc % base-node-fields/type-name      node-type-name))
-    (alter node-ref #(assoc % base-node-fields/input-buffers  (repeat (count (get-node-inputs  node-ref)) (ref ()))))
-    (alter node-ref #(assoc % base-node-fields/output-buffers (repeat (count (get-node-outputs node-ref)) (ref ()))))
+    (alter node-ref #(assoc % base-node-fields/input-buffers  (repeat (count (get-node-inputs  node-ref)) (ref []))))
+    (alter node-ref #(assoc % base-node-fields/output-buffers (repeat (count (get-node-outputs node-ref)) (ref []))))
     node-ref))
 
 ;; +------------------+
