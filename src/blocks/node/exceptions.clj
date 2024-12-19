@@ -120,6 +120,7 @@
                                             get-node-name     [not-node]
                                             store             [not-node
                                                                no-buffer-under-index]
+                                            flush-output      [not-node]
                                             execute           [inputs-unvalidated]})
 
 ;; +---------------------------+
