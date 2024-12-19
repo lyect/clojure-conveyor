@@ -3,7 +3,7 @@
             [blocks.channel.methods                  :as channel-methods]
             [blocks.channel.types                    :as channel-types]
             [blocks.node.base                        :as node-base]
-            [blocks.node.definitions.base.fields     :as base-node-fields]
+            [blocks.node.definitions.node.fields     :as base-node-fields]
             [blocks.node.definitions.concat.fields   :as concat-node-fields]
             [blocks.node.definitions.node.def        :as base-node-def]
             [blocks.node.methods                     :as node-methods]
