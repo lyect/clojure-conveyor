@@ -39,7 +39,9 @@
 
 ;; No need to check whether "vertex" is a correct vertex or not
 ;; It will be done inside "get-vertex-property"
-(defn get-vertex-node [vertex-ref] (get-vertex-property vertex-ref vertex-properties/node))
+(defn get-vertex-node    [vertex-ref] (get-vertex-property vertex-ref vertex-properties/node))
+(defn get-vertex-inputs  [vertex-ref] (get-vertex-property vertex-ref vertex-properties/inputs))
+(defn get-vertex-outputs [vertex-ref] (get-vertex-property vertex-ref vertex-properties/outputs))
 
 ;; +------------------------+
 ;; |                        |
@@ -225,8 +227,8 @@
 (defn- run
   [vertex-ref]
   (a/go (while true
-          (let [[value ch]  (a/alts! (vertex-ref vertex-properties/inputs))
-                input-index (.indexOf (vertex-ref vertex-properties/inputs) ch)]
+          (let [[value ch]  (a/alts! (get-vertex-inputs vertex-ref))
+                input-index (.indexOf (get-vertex-inputs vertex-ref) ch)]
             (when (= input-index -1)
               (throw (vertex-exceptions/construct vertex-exceptions/run vertex-exceptions/unknown-channel
                                                   (str "Got value \"" value "\" from unknown channel \"" ch "\""))))
@@ -235,7 +237,7 @@
                (node-methods/store   node-ref input-index value)
                (node-methods/execute node-ref)
                (doseq [output-index (range (count (node-methods/get-node-outputs node-ref)))]
-                 (let [output (get (vertex-ref vertex-properties/outputs) output-index)]
+                 (let [output (get (get-vertex-outputs vertex-ref) output-index)]
                    (doseq [output-value (->> (node-methods/flush-output node-ref output-index)
                                              (list)
                                              (flatten))]
