@@ -23,6 +23,7 @@
 (def get-node-field    ::type-get-node-field)
 (def get-node-name     ::type-get-node-name)
 (def store             ::type-store)
+(def flush-output      ::type-flush-output)
 (def execute           ::type-execute)
 
 (def ^:private type-list [define-node-type
@@ -31,6 +32,7 @@
                           get-node-field
                           get-node-name
                           store
+                          flush-output
                           execute])
 
 ;; +----------------------+

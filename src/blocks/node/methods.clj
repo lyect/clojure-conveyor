@@ -134,12 +134,28 @@
                                         (str "No buffer in \"" node-ref "\" by index \"" input-index "\""))))
     input-buffer-ref))
 
+(defn- get-output-buffer-ref
+  [node-ref output-index]
+  (get ((node-ref node-properties/fields) base-node-fields/output-buffers) output-index
+       (throw (node-exceptions/construct node-exceptions/flush-output node-exceptions/no-buffer-under-index
+                                         (str "No buffer in \"" node-ref "\" by index \"" output-index "\"")))))
+
 (defn store
   [node-ref input-index value]
   (when-not (node? node-ref)
     (throw (node-exceptions/construct node-exceptions/store node-exceptions/not-node
                                       (str "\"" node-ref "\" is not a node"))))
   (alter (get-input-buffer-ref node-ref input-index) #(into % value)))
+
+(defn flush-output
+  [node-ref output-index]
+  (when-not (node? node-ref)
+    (throw (node-exceptions/construct node-exceptions/flush-output node-exceptions/not-node
+                                      (str "\"" node-ref "\ is not a node"))))
+  (let [output-buffer-ref (get-output-buffer-ref node-ref output-index)
+        output-buffer @output-buffer-ref]
+    (ref-set output-buffer-ref [])
+    output-buffer))
 
 (defn execute
   [node-ref]
@@ -150,3 +166,4 @@
         (throw (node-exceptions/construct node-exceptions/execute node-exceptions/inputs-unvalidated
                                           (str "Inputs of \"" node-ref "\" are invalidated"))))
       ((get-node-function node-ref) node-ref))))
+
