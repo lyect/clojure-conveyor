@@ -20,9 +20,7 @@
   (and (some? @obj-ref)
        (map? @obj-ref)
        (obj-ref base-node-fields/type-name)
-       (node-types/defined? (obj-ref base-node-fields/type-name))
-       (utils/lists-equal? (keys @obj-ref)
-                           ((node-hierarchy/tree (obj-ref base-node-fields/type-name)) node-properties/fields))))
+       (node-types/defined? (obj-ref base-node-fields/type-name))))
 
 ;; +----------------------------------------+
 ;; |                                        |
@@ -37,7 +35,7 @@
   [node-ref property]
   (when-not (node? node-ref)
     (throw (node-exceptions/construct node-exceptions/get-node-property node-exceptions/not-node
-                                      (str "\"" node-ref "\" is not a node"))))
+                                      (str "\"" node-ref "\" is not a node: " @node-ref))))
   ((node-hierarchy/tree (node-ref base-node-fields/type-name)) property))
 
 ;; No need to check whether "node" is a correct node or not
@@ -151,7 +149,7 @@
   [node-ref output-index]
   (when-not (node? node-ref)
     (throw (node-exceptions/construct node-exceptions/flush-output node-exceptions/not-node
-                                      (str "\"" node-ref "\ is not a node"))))
+                                      (str "\"" node-ref "\" is not a node"))))
   (let [output-buffer-ref (get-output-buffer-ref node-ref output-index)
         output-buffer @output-buffer-ref]
     (ref-set output-buffer-ref [])

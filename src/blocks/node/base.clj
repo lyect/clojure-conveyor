@@ -50,7 +50,7 @@
     (when-not (validate-function (new-node-type node-properties/function))
       (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/function-unvalidated
                                         (str "Function of type named \"" new-node-type-name " is unvalidated"))))
-    (alter node-hierarchy/tree #(assoc % new-node-type-name new-node-type))))
+    (dosync (alter node-hierarchy/tree #(assoc % new-node-type-name new-node-type)))))
 
 (defmacro define-node-type
   "Define a node with _type-name_ and _properties_"
@@ -101,7 +101,6 @@
                                node-properties/inputs-validator (or     (properties-map# node-properties/inputs-validator) (super# node-properties/inputs-validator))
                                node-properties/fields           (concat new-type-fields# super-fields#)})
        (when-not (utils/lists-equal? node-properties/properties-list (keys (node-hierarchy/tree ~new-node-type-name)))
-         (do
-           (alter node-hierarchy/tree #(dissoc % ~new-node-type-name))
-           (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/node-properties-missing
-                                             "Not all node-properties are added to define-node-type macro")))))))
+         (dosync (alter node-hierarchy/tree #(dissoc % ~new-node-type-name)))
+         (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/node-properties-missing
+                                           "Not all node-properties are added to define-node-type macro"))))))
