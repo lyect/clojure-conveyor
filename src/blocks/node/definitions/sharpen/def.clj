@@ -1,5 +1,7 @@
 (ns blocks.node.definitions.sharpen.def
-  (:require [blocks.channel.definitions.matrix.fields :as matrix-channel-fields]
+  (:require [blocks.channel.definitions.image.def     :as image-channel-def]
+            [blocks.channel.definitions.matrix.def    :as matrix-channel-def]
+            [blocks.channel.definitions.matrix.fields :as matrix-channel-fields]
             [blocks.channel.methods                   :as channel-methods]
             [blocks.channel.types                     :as channel-types]
             [blocks.node.base                         :as node-base]
@@ -43,6 +45,8 @@
 (defn define-sharpen-node []
   (when-not (node-types/defined? node-types/SharpenT)
     (base-node-def/define-base-node)
+    (image-channel-def/define-image-channel)
+    (matrix-channel-def/define-matrix-channel)
     (node-base/define-node-type node-types/SharpenT
       node-properties/inputs           [channel-types/ImageT
                                         channel-types/MatrixT]
