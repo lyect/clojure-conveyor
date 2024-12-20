@@ -64,24 +64,15 @@
 
        (let [test-channel1 (channel-methods/create channel-types/IntegerT number-channel-fields/value 15)
              test-channel2 (channel-methods/create channel-types/IntegerT number-channel-fields/value  2)]
-         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute test-node
-                                                                                      test-channel1
-                                                                                      test-channel2)
-                                                                0)
+         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute test-node) 0)
                                                            number-channel-fields/value) 25)))
        (let [test-channel1 (channel-methods/create channel-types/IntegerT number-channel-fields/value -100)
              test-channel2 (channel-methods/create channel-types/IntegerT number-channel-fields/value   30)]
-         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute test-node
-                                                                                      test-channel1
-                                                                                      test-channel2)
-                                                                0)
+         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute test-node) 0)
                                                            number-channel-fields/value) -62)))
        (let [test-channel1 (channel-methods/create channel-types/IntegerT number-channel-fields/value 0)
              test-channel2 (channel-methods/create channel-types/IntegerT number-channel-fields/value 0)]
-         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute test-node
-                                                                                      test-channel1
-                                                                                      test-channel2)
-                                                                0)
+         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute test-node) 0)
                                                            number-channel-fields/value) 8)))))))
 
 (cljtest/deftest node-creation-derived
@@ -103,30 +94,18 @@
        (let [test-channel1 (channel-methods/create channel-types/IntegerT number-channel-fields/value 15)
              test-channel2 (channel-methods/create channel-types/IntegerT number-channel-fields/value  2)
              test-channel3 (channel-methods/create channel-types/IntegerT number-channel-fields/value 11)]
-         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute derived-test-node
-                                                                                      test-channel1
-                                                                                      test-channel2
-                                                                                      test-channel3)
-                                                                0)
+         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute derived-test-node) 0)
                                                            number-channel-fields/value) 37)))
 
        (let [test-channel1 (channel-methods/create channel-types/IntegerT number-channel-fields/value -1)
              test-channel2 (channel-methods/create channel-types/IntegerT number-channel-fields/value -5)
              test-channel3 (channel-methods/create channel-types/IntegerT number-channel-fields/value -7)]
-         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute derived-test-node
-                                                                                      test-channel1
-                                                                                      test-channel2
-                                                                                      test-channel3)
-                                                                0)
+         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute derived-test-node) 0)
                                                            number-channel-fields/value) -4)))
        (let [test-channel1 (channel-methods/create channel-types/IntegerT number-channel-fields/value 0)
              test-channel2 (channel-methods/create channel-types/IntegerT number-channel-fields/value 0)
              test-channel3 (channel-methods/create channel-types/IntegerT number-channel-fields/value 0)]
-         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute derived-test-node
-                                                                                      test-channel1
-                                                                                      test-channel2
-                                                                                      test-channel3)
-                                                                0)
+         (cljtest/is (= (channel-methods/get-channel-field (nth (node-methods/execute derived-test-node) 0)
                                                            number-channel-fields/value) 9)))))))
 
 (cljtest/deftest node-creation-type-undeclared
