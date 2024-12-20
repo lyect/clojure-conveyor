@@ -1,5 +1,7 @@
 (ns blocks.node.definitions.gamma.def
-  (:require [blocks.channel.methods               :as channel-methods]
+  (:require [blocks.channel.definitions.image.def :as image-channel-def]
+            [blocks.channel.definitions.number.def :as number-channel-def]
+            [blocks.channel.methods               :as channel-methods]
             [blocks.channel.types                 :as channel-types]
             [blocks.node.base                     :as node-base]
             [blocks.node.definitions.node.fields  :as base-node-fields]
@@ -40,6 +42,8 @@
 (defn define-gamma-node []
   (when-not (node-types/defined? node-types/GammaT)
     (base-node-def/define-base-node)
+    (image-channel-def/define-image-channel)
+    (number-channel-def/define-number-channel)
     (node-base/define-node-type node-types/GammaT
       node-properties/inputs           [channel-types/ImageT
                                         channel-types/NumberT]
