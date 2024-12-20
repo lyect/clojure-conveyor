@@ -7,4 +7,4 @@
 (def inputs-connectivity  ::property-inputs-connectivity)
 (def outputs-connectivity ::property-outputs-connectivity)
 
-(def properties-list [node inputs inputs-connectivity outputs-connectivity])
+(def properties-list [node inputs outputs inputs-connectivity outputs-connectivity])

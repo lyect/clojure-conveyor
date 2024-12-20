@@ -53,13 +53,13 @@
 (defn- initialize-inputs
   "Get async channel for each _node_'s input"
   [node-ref]
-  (into [] (repeat (count (node-methods/get-node-inputs node-ref)) a/chan)))
+  (into [] (repeat (count (node-methods/get-node-inputs node-ref)) (a/chan))))
 
 ;; No need to check whether "node" is correct node or not, since it is evaluated within "create" function
 (defn- initialize-outputs
   "Get async channel for each _node_'s input"
   [node-ref]
-  (into [] (repeat (count (node-methods/get-node-outputs node-ref)) a/chan)))
+  (into [] (repeat (count (node-methods/get-node-outputs node-ref)) (a/chan))))
 
 ;; No need to check whether "node" is correct node or not, since it is evaluated within "create" function
 (defn- initialize-inputs-connectivity
