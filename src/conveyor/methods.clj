@@ -4,6 +4,8 @@
             [blocks.vertex.methods :as vertex-methods]
             [conveyor.exceptions   :as conveyor-exceptions]
             [conveyor.properties   :as conveyor-properties]
+            [clojure.core.async    :as    a
+                                   :refer [>!]]
             [utils]))
 
 
@@ -36,7 +38,7 @@
   [conveyor-ref property-name]
   (when-not (conveyor? conveyor-ref)
     (throw (conveyor-exceptions/construct conveyor-exceptions/get-conveyor-property conveyor-exceptions/not-conveyor
-                                      (str "\"" conveyor-ref "\" is not a conveyor"))))
+                                      (str "\"" conveyor-ref "\" is not a conveyor: " @conveyor-ref))))
   (conveyor-ref property-name))
 
 ;; No need to check whether "conveyor" is a correct conveyor or not
@@ -93,7 +95,7 @@
         conveyor-inputs))
    []
    (keep-indexed vector vertices-refs)))
-  
+
 (defn- initialize-outputs
   "Initialize conveyor's outputs"
   [vertices-refs]
@@ -126,3 +128,68 @@
       (throw (conveyor-exceptions/construct conveyor-exceptions/create conveyor-exceptions/conveyor-properties-missing
                                           "Not all conveyor-properties are added to create function")))
     conveyor-ref))
+
+;; +--------------------------+
+;; |                          |
+;; |   CONVEYOR METHODS       |
+;; |                          |
+;; +--------------------------+
+
+(defn- set-input-params
+  [conv-ref input-params]
+  (a/go
+    (doseq [[[vertex-index input-index] value] input-params]
+      (let [vertex (nth (get-conveyor-vertices conv-ref) vertex-index)
+            input  (nth (vertex-methods/get-vertex-inputs vertex) input-index)]
+        (>! input value)))))
+
+(defn- get-outputs-map
+  [conv-ref]
+  (let [vertices (get-conveyor-vertices conv-ref)]
+    (reduce (fn [m v] (reduce #(assoc %1 %2 v) m (vertex-methods/get-vertex-outputs v))) {} vertices)))
+
+(defn- listen-outputs
+  [conv-ref]
+  (let [outputs (map (fn [[vertex-index output-index]]
+                       (let [vertex (nth (get-conveyor-vertices conv-ref) vertex-index)]
+                         (nth (vertex-methods/get-vertex-outputs vertex) output-index)))
+                     (get-conveyor-outputs conv-ref))]
+    (a/go
+      (while true
+        (let [[value output] (a/alts! outputs)]
+          (println (str "From " output " produced value: " value)))))))
+
+(defn- run
+  [conv-ref]
+  (let [vertices (get-conveyor-vertices conv-ref)
+        outputs-map (get-outputs-map conv-ref)]
+   (map vertex-methods/start vertices)
+   (-> (Thread. (fn [] (listen-outputs conv-ref))) .start)
+   (a/go
+     (while true
+       (let [[value output-ch] (a/alts! (keys outputs-map))
+             vertex-ref (outputs-map output-ch)
+             vertex-index (.indexOf vertices vertex-ref)
+             output-index (.indexOf (vertex-methods/get-vertex-outputs vertex-ref) output-ch)]
+         (when (= vertex-index -1)
+           (throw (conveyor-exceptions/construct conveyor-exceptions/run conveyor-exceptions/unknown-vertex
+                                                 (str "Work with unknown vertex \"" vertex-ref "\""))))
+         (when (= output-index -1)
+           (throw (conveyor-exceptions/construct conveyor-exceptions/run conveyor-exceptions/unknown-channel
+                                                 (str "Got value \"" value "\" from unknown channel \"" output-ch "\""))))
+         (let [edge ((get-conveyor-edges conv-ref) [vertex-index output-index])
+               vertex-consumer-ref (nth (get-conveyor-vertices conv-ref) (first edge))
+               vertex-consumer-input (nth (vertex-methods/get-vertex-inputs vertex-consumer-ref) (second edge))]
+           (>! vertex-consumer-input value)))))))
+
+(defn start
+  "Start _conv-ref_ with _input-params_: <[vertex input-channel-index] value>"
+  [conv-ref input-params-map]
+  (when-not (conveyor? conv-ref)
+    (throw (conveyor-exceptions/construct conveyor-exceptions/start conveyor-exceptions/not-conveyor
+                                          (str "\"" conv-ref "\" is not a conveyor"))))
+  (when-not (utils/lists-equal? (keys input-params-map) (get-conveyor-inputs conv-ref))
+    (throw (conveyor-exceptions/construct conveyor-exceptions/start conveyor-exceptions/not-all-input-params
+                                          (str "Not all input params define for \"" conv-ref "\""))))
+  (set-input-params conv-ref input-params-map)
+  (run conv-ref))
