@@ -1,5 +1,6 @@
 (ns blocks.node.definitions.denoise.def
-  (:require [blocks.channel.methods                 :as channel-methods]
+  (:require [blocks.channel.definitions.image.def   :as image-channel-def]
+            [blocks.channel.methods                 :as channel-methods]
             [blocks.channel.types                   :as channel-types]
             [blocks.node.base                       :as node-base]
             [blocks.node.definitions.node.fields    :as base-node-fields]
@@ -34,6 +35,7 @@
 (defn define-denoise-node []
   (when-not (node-types/defined? node-types/DenoiseT)
     (base-node-def/define-base-node)
+    (image-channel-def/define-image-channel)
     (node-base/define-node-type node-types/DenoiseT
                                 node-properties/inputs           [channel-types/ImageT]
                                 node-properties/outputs          [channel-types/ImageT]
