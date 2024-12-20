@@ -1,5 +1,6 @@
 (ns blocks.node.definitions.difference.def
-  (:require [blocks.channel.definitions.image.fields   :as image-channel-fields]
+  (:require [blocks.channel.definitions.image.def      :as image-channel-def]
+            [blocks.channel.definitions.image.fields   :as image-channel-fields]
             [blocks.channel.methods                    :as channel-methods]
             [blocks.channel.types                      :as channel-types]
             [blocks.node.base                          :as node-base]
@@ -50,6 +51,7 @@
 (defn define-difference-node []
   (when-not (node-types/defined? node-types/DifferenceT)
     (base-node-def/define-base-node)
+    (image-channel-def/define-image-channel)
     (node-base/define-node-type node-types/DifferenceT
       node-properties/inputs           [channel-types/ImageT
                                         channel-types/ImageT]
