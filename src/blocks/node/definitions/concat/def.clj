@@ -1,5 +1,6 @@
 (ns blocks.node.definitions.concat.def
-  (:require [blocks.channel.definitions.image.fields :as image-channel-fields]
+  (:require [blocks.channel.definitions.image.def    :as image-channel-def]
+            [blocks.channel.definitions.image.fields :as image-channel-fields]
             [blocks.channel.methods                  :as channel-methods]
             [blocks.channel.types                    :as channel-types]
             [blocks.node.base                        :as node-base]
@@ -46,6 +47,7 @@
 (defn define-concat-node []
   (when-not (node-types/defined? node-types/ConcatT)
     (base-node-def/define-base-node)
+    (image-channel-def/define-image-channel)
     (node-base/define-node-type node-types/ConcatT
                                 node-properties/inputs           [channel-types/ImageT]
                                 node-properties/outputs          [channel-types/ImageT]
