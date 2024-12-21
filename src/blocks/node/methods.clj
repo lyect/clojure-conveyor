@@ -14,13 +14,14 @@
 ;; |                             |
 ;; +-----------------------------+
 
-(defn node?
+(def node?
   "Predicate to check whether _obj_ is node or not"
-  [obj-ref]
-  (and (some? @obj-ref)
-       (map? @obj-ref)
-       (obj-ref base-node-fields/type-name)
-       (node-types/defined? (obj-ref base-node-fields/type-name))))
+  (memoize
+   (fn [obj-ref]
+     (and (some? @obj-ref)
+          (map? @obj-ref)
+          (obj-ref base-node-fields/type-name)
+          (node-types/defined? (obj-ref base-node-fields/type-name))))))
 
 ;; +----------------------------------------+
 ;; |                                        |
@@ -40,14 +41,12 @@
 
 ;; No need to check whether "node" is a correct node or not
 ;; It will be done inside "get-node-property"
-(defn get-node-type-name        [node-ref] (get-node-property node-ref node-properties/type-name))
-(defn get-node-super-name       [node-ref] (get-node-property node-ref node-properties/super-name))
-(defn get-node-inputs           [node-ref] (get-node-property node-ref node-properties/inputs))
-(defn get-node-outputs          [node-ref] (get-node-property node-ref node-properties/outputs))
-(defn get-node-function         [node-ref] (get-node-property node-ref node-properties/function))
-(defn get-node-ready-validator  [node-ref] (get-node-property node-ref node-properties/ready-validator))
-(defn get-node-inputs-validator [node-ref] (get-node-property node-ref node-properties/inputs-validator))
-(defn get-node-fields           [node-ref] (remove (set base-node-fields/fields-list) (get-node-property node-ref node-properties/fields)))
+(def get-node-type-name  (memoize (fn [node-ref] (get-node-property node-ref node-properties/type-name))))
+(def get-node-super-name (memoize (fn [node-ref] (get-node-property node-ref node-properties/super-name))))
+(def get-node-inputs     (memoize (fn [node-ref] (get-node-property node-ref node-properties/inputs))))
+(def get-node-outputs    (memoize (fn [node-ref] (get-node-property node-ref node-properties/outputs))))
+(def get-node-function   (memoize (fn [node-ref] (get-node-property node-ref node-properties/function))))
+(def get-node-fields     (memoize (fn [node-ref] (remove (set base-node-fields/fields-list) (get-node-property node-ref node-properties/fields)))))
 
 ;; +---------------------------------+
 ;; |                                 |
@@ -55,13 +54,14 @@
 ;; |                                 |
 ;; +---------------------------------+
 
-(defn get-node-name
+(def get-node-name
   "Get name of _node_"
-  [node-ref]
-  (when-not (node? node-ref)
-    (throw (node-exceptions/construct node-exceptions/get-node-name node-exceptions/not-node
-                                      (str "\"" node-ref "\" is not a node"))))
-  (node-ref base-node-fields/node-name))
+  (memoize
+   (fn [node-ref]
+     (when-not (node? node-ref)
+       (throw (node-exceptions/construct node-exceptions/get-node-name node-exceptions/not-node
+                                         (str "\"" node-ref "\" is not a node"))))
+     (node-ref base-node-fields/node-name))))
 
 (defn get-node-field
   "Get field's value of _node_ by _field-name_"
@@ -73,7 +73,7 @@
     (when-not (protected-node field-name)
       (throw (node-exceptions/construct node-exceptions/get-node-field node-exceptions/unknown-field
                                         (str "\"" node-ref "\" has no field named \"" field-name "\""))))
-    ; Base class fields protection
+       ; Base class fields protection
     (protected-node field-name)))
 
 ;; +----------------------+
@@ -112,10 +112,18 @@
                                         (str "Tried to create " node-type-name " with excess fields"))))
     (doseq [fields-map-entry fields-map]
       (alter node-ref #(assoc % (first fields-map-entry) (second fields-map-entry))))
-    (alter node-ref #(assoc % base-node-fields/node-name      node-name))
-    (alter node-ref #(assoc % base-node-fields/type-name      node-type-name))
-    (alter node-ref #(assoc % base-node-fields/input-buffers  (repeat (count (get-node-inputs  node-ref)) (ref []))))
-    (alter node-ref #(assoc % base-node-fields/output-buffers (repeat (count (get-node-outputs node-ref)) (ref []))))
+    (alter node-ref #(assoc % base-node-fields/node-name             node-name))
+    (alter node-ref #(assoc % base-node-fields/type-name             node-type-name))
+    (alter node-ref #(assoc % base-node-fields/input-buffers         (repeatedly (count (get-node-inputs  node-ref)) (fn [] (ref [])))))
+    (alter node-ref #(assoc % base-node-fields/input-buffers-amounts (repeat     (count (get-node-outputs node-ref)) 1)))
+    (alter node-ref #(assoc % base-node-fields/output-buffers        (repeatedly (count (get-node-outputs node-ref)) (fn [] (ref [])))))
+    
+    (when (fields-map base-node-fields/input-buffers-amounts)
+      (alter node-ref #(assoc % base-node-fields/input-buffers-amounts (reduce
+                                                                        (fn [input-buffers-amounts [input-index input-amount]]
+                                                                          (assoc input-buffers-amounts input-index input-amount))
+                                                                        (node-ref base-node-fields/input-buffers-amounts)
+                                                                        (fields-map base-node-fields/input-buffers-amounts)))))
     node-ref))
 
 ;; +------------------+
@@ -124,26 +132,22 @@
 ;; |                  |
 ;; +------------------+
 
-(defn- get-input-buffer-ref
-  [node-ref input-index]
-  (let [input-buffer-ref (get ((node-ref node-properties/fields) base-node-fields/input-buffers) input-index)]
-    (when (nil? input-buffer-ref)
-      (throw (node-exceptions/construct node-exceptions/store node-exceptions/no-buffer-under-index
-                                        (str "No buffer in \"" node-ref "\" by index \"" input-index "\""))))
-    input-buffer-ref))
+(def ^:private get-input-buffer-ref
+  (memoize
+   (fn [node-ref input-index]
+     (nth (node-ref base-node-fields/input-buffers) input-index))))
 
-(defn- get-output-buffer-ref
-  [node-ref output-index]
-  (get ((node-ref node-properties/fields) base-node-fields/output-buffers) output-index
-       (throw (node-exceptions/construct node-exceptions/flush-output node-exceptions/no-buffer-under-index
-                                         (str "No buffer in \"" node-ref "\" by index \"" output-index "\"")))))
+(def ^:private get-output-buffer-ref
+  (memoize
+   (fn [node-ref output-index]
+     (nth (node-ref base-node-fields/output-buffers) output-index))))
 
 (defn store
   [node-ref input-index value]
   (when-not (node? node-ref)
     (throw (node-exceptions/construct node-exceptions/store node-exceptions/not-node
                                       (str "\"" node-ref "\" is not a node"))))
-  (alter (get-input-buffer-ref node-ref input-index) #(into % value)))
+  (alter (get-input-buffer-ref node-ref input-index) #(conj % value)))
 
 (defn flush-output
   [node-ref output-index]
@@ -155,13 +159,16 @@
     (ref-set output-buffer-ref [])
     output-buffer))
 
+(defn- ready?
+  [node-ref]
+  (reduce
+   (fn [res [input-buffer-amount input-buffer-ref]]
+     (and res (<= input-buffer-amount (count @input-buffer-ref))))
+   true
+   (utils/zip (node-ref base-node-fields/input-buffers-amounts) (node-ref base-node-fields/input-buffers))))
+
 (defn execute
   [node-ref]
-  (let [ready-validator  (get-node-ready-validator node-ref)
-        inputs-validator (get-node-inputs-validator node-ref)]
-    (while (ready-validator node-ref)
-      (when-not (inputs-validator node-ref)
-        (throw (node-exceptions/construct node-exceptions/execute node-exceptions/inputs-unvalidated
-                                          (str "Inputs of \"" node-ref "\" are invalidated"))))
-      ((get-node-function node-ref) node-ref))))
+  (while (ready? node-ref)
+    ((get-node-function node-ref) node-ref)))
 

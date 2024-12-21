@@ -14,16 +14,17 @@
 ;; |                                |
 ;; +--------------------------------+
 
-(defn channel?
+(def channel?
   "Predicate to check whether _obj_ is channel or not"
-  [obj-ref]
-  (and (some? @obj-ref)
-       (map? @obj-ref)
-       (obj-ref base-channel-fields/type-name)
-       (channel-types/defined? (obj-ref base-channel-fields/type-name))
-       (utils/lists-equal? (remove #{base-channel-fields/type-name} (keys @obj-ref))
-                           (remove #{base-channel-fields/type-name}
-                                   ((channel-hierarchy/tree (obj-ref base-channel-fields/type-name)) channel-properties/fields)))))
+  (memoize
+   (fn [obj-ref]
+     (and (some? @obj-ref)
+          (map? @obj-ref)
+          (obj-ref base-channel-fields/type-name)
+          (channel-types/defined? (obj-ref base-channel-fields/type-name))
+          (utils/lists-equal? (remove #{base-channel-fields/type-name} (keys @obj-ref))
+                              (remove #{base-channel-fields/type-name}
+                                      ((channel-hierarchy/tree (obj-ref base-channel-fields/type-name)) channel-properties/fields)))))))
 
 ;; +-------------------------------------------+
 ;; |                                           |
@@ -43,9 +44,9 @@
 
 ;; No need to check whether "channel" is a correct channel or not
 ;; It will be done inside "get-channel-property"
-(defn get-channel-type-name  [channel-ref] (get-channel-property channel-ref channel-properties/type-name))
-(defn get-channel-super-name [channel-ref] (get-channel-property channel-ref channel-properties/super-name))
-(defn get-channel-fields     [channel-ref] (remove (set base-channel-fields/fields-list) (get-channel-property channel-ref channel-properties/fields)))
+(def get-channel-type-name  (memoize (fn [channel-ref] (get-channel-property channel-ref channel-properties/type-name))))
+(def get-channel-super-name (memoize (fn [channel-ref] (get-channel-property channel-ref channel-properties/super-name))))
+(def get-channel-fields     (memoize (fn [channel-ref] (remove (set base-channel-fields/fields-list) (get-channel-property channel-ref channel-properties/fields)))))
 
 ;; +------------------------------------+
 ;; |                                    |

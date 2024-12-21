@@ -86,19 +86,11 @@
        (when-not (or (properties-map# node-properties/function) (super# node-properties/function))
          (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/function-undefined
                                            (str "Function of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined function)"))))
-       (when-not (or (properties-map# node-properties/ready-validator) (super# node-properties/ready-validator))
-         (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/ready-validator-undefined
-                                           (str "Ready validator of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined ready validator)"))))
-       (when-not (or (properties-map# node-properties/inputs-validator) (super# node-properties/inputs-validator))
-         (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/inputs-validator-undefined
-                                           (str "Inputs validator of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined inputs validator)"))))
        (append-node-hierarchy {node-properties/type-name  ~new-node-type-name
                                node-properties/super-name super-name#
-                               node-properties/inputs           (or     (properties-map# node-properties/inputs)           (super# node-properties/inputs))
-                               node-properties/outputs          (or     (properties-map# node-properties/outputs)          (super# node-properties/outputs))
-                               node-properties/function         (or     (properties-map# node-properties/function)         (super# node-properties/function))
-                               node-properties/ready-validator  (or     (properties-map# node-properties/ready-validator)  (super# node-properties/ready-validator))
-                               node-properties/inputs-validator (or     (properties-map# node-properties/inputs-validator) (super# node-properties/inputs-validator))
+                               node-properties/inputs           (or     (properties-map# node-properties/inputs)   (super# node-properties/inputs))
+                               node-properties/outputs          (or     (properties-map# node-properties/outputs)  (super# node-properties/outputs))
+                               node-properties/function         (or     (properties-map# node-properties/function) (super# node-properties/function))
                                node-properties/fields           (concat new-type-fields# super-fields#)})
        (when-not (utils/lists-equal? node-properties/properties-list (keys (node-hierarchy/tree ~new-node-type-name)))
          (dosync (alter node-hierarchy/tree #(dissoc % ~new-node-type-name)))

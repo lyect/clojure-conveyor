@@ -24,8 +24,7 @@
 
 (def ^:private type-list [create
                           get-conveyor-property
-                          start
-                          run])
+                          start])
 
 ;; +----------------------+
 ;; |                      |
@@ -36,15 +35,11 @@
 (def different-input-output      ::conveyorexceptioncause-different-input-output)
 (def conveyor-properties-missing ::conveyorexceptioncause-conveyor-properties-missing)
 (def not-conveyor                ::conveyorexceptioncause-not-conveyor)
-(def unknown-channel             ::conveyorexceptioncause-unknown-channel)
-(def unknown-vertex              ::conveyorexceptioncause-unknown-vertex)
 (def not-all-input-params        ::conveyorexceptioncause-not-all-input-params)
 
 (def ^:private cause-list [different-input-output
                            conveyor-properties-missing
                            not-conveyor
-                           unknown-channel
-                           unknown-vertex
                            not-all-input-params])
 
 ;; +---------------------------------------------------+
@@ -57,9 +52,7 @@
                                                                    conveyor-properties-missing]
                                             get-conveyor-property [not-conveyor]
                                             start                 [not-conveyor
-                                                                   not-all-input-params]
-                                            run                   [unknown-vertex
-                                                                   unknown-channel]})
+                                                                   not-all-input-params]})
 
 ;; +---------------------------+
 ;; |                           |

@@ -11,16 +11,15 @@
 
 (intern 'blocks.channel.types 'types-list [channel-types/ChannelT ::TestChannel1 ::TestChannel2 ::TestChannel3 ::UndefinedChannel])
 
-(dosync
- (base-channel-def/define-base-channel)
+(base-channel-def/define-base-channel)
 
- (channel-base/define-channel-type ::TestChannel1
-                                   channel-properties/fields '(::h ::w))
- (channel-base/define-channel-type ::TestChannel2
-                                   channel-properties/fields '(::x ::y))
- (channel-base/define-channel-type ::TestChannel3
-                                   channel-properties/super-name ::TestChannel1
-                                   channel-properties/fields     '(::c)))
+(channel-base/define-channel-type ::TestChannel1
+                                  channel-properties/fields '(::h ::w))
+(channel-base/define-channel-type ::TestChannel2
+                                  channel-properties/fields '(::x ::y))
+(channel-base/define-channel-type ::TestChannel3
+                                  channel-properties/super-name ::TestChannel1
+                                  channel-properties/fields     '(::c))
 
 
 (cljtest/deftest channel-creation

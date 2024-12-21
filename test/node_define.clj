@@ -17,8 +17,8 @@
 (intern 'blocks.channel.types 'types-list [channel-types/ChannelT ::TestChannel1 ::TestChannel2 ::TestChannel3])
 (intern 'blocks.node.types    'types-list [node-types/NodeT ::TestNode ::DerivedTestNode])
 
-(dosync (base-channel-def/define-base-channel))
-(dosync (base-node-def/define-base-node))
+(base-channel-def/define-base-channel)
+(base-node-def/define-base-node)
 
 (channel-base/define-channel-type ::TestChannel1
                                   channel-properties/fields '(::h ::w))
@@ -51,10 +51,10 @@
 (cljtest/deftest node-define-derived
   (cljtest/testing "Derived node definition test"
     (node-base/define-node-type ::TestNode
-                                node-properties/inputs  (list ::TestChannel1 ::TestChannel2)
-                                node-properties/outputs (list ::TestChannel3)
-                                node-properties/function(fn [x] (inc x))
-                                node-properties/fields  '(::f1 ::f2 ::f3))
+                                node-properties/inputs   (list ::TestChannel1 ::TestChannel2)
+                                node-properties/outputs  (list ::TestChannel3)
+                                node-properties/function (fn [x] (inc x))
+                                node-properties/fields   '(::f1 ::f2 ::f3))
     (node-base/define-node-type ::DerivedTestNode
                                 node-properties/super-name ::TestNode
                                 node-properties/inputs     (list ::TestChannel3 ::TestChannel3)
@@ -78,11 +78,7 @@
   (cljtest/testing "Node with undeclared type definition test"
     (cljtest/is
      (try
-       (node-base/define-node-type ::UndeclaredTestNode
-                                   node-properties/inputs  ()
-                                   node-properties/outputs ()
-                                   node-properties/function()
-                                   node-properties/fields  ())
+       (node-base/define-node-type ::UndeclaredTestNode)
        (catch clojure.lang.ExceptionInfo e
          (if (and (= node-exceptions/define-node-type (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/type-undeclared  (-> e ex-data node-exceptions/cause-keyword)))
@@ -97,11 +93,7 @@
     (cljtest/is
      (try
        (node-base/define-node-type ::TestNode
-                                   node-properties/super-name ::UndeclaredTestNode
-                                   node-properties/inputs     ()
-                                   node-properties/outputs    ()
-                                   node-properties/function   ()
-                                   node-properties/fields     ())
+                                   node-properties/super-name ::UndeclaredTestNode)
        (catch clojure.lang.ExceptionInfo e
          (if (and (= node-exceptions/define-node-type (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/super-undeclared (-> e ex-data node-exceptions/cause-keyword)))
@@ -116,11 +108,7 @@
     (cljtest/is
      (try
        (node-base/define-node-type ::DerivedTestNode
-                                   node-properties/super-name ::TestNode
-                                   node-properties/inputs     ()
-                                   node-properties/outputs    ()
-                                   node-properties/function   ()
-                                   node-properties/fields     ())
+                                   node-properties/super-name ::TestNode)
        (catch clojure.lang.ExceptionInfo e
          (if (and (= node-exceptions/define-node-type (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/super-undefined  (-> e ex-data node-exceptions/cause-keyword)))
@@ -159,10 +147,10 @@
      (try
        (node-base/define-node-type ::DerivedTestNode
                                    node-properties/super-name ::TestNode
-                                   node-properties/inputs     (list ::TestChannel3 ::TestChannel3)
-                                   node-properties/outputs    (list ::TestChannel1 ::TestChannel2)
-                                   node-properties/function   (fn [x] (+ x 10))
-                                   node-properties/fields     '(::f1))
+                                   node-properties/inputs   (list ::TestChannel3 ::TestChannel3)
+                                   node-properties/outputs  (list ::TestChannel1 ::TestChannel2)
+                                   node-properties/function (fn [x] (+ x 10))
+                                   node-properties/fields   '(::f1))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= node-exceptions/define-node-type          (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/super-fields-intersection (-> e ex-data node-exceptions/cause-keyword)))
@@ -234,11 +222,10 @@
     (cljtest/is
      (try
        (node-base/define-node-type ::TestNode
-         (node-base/define-node-type ::TestNode
-                                     node-properties/inputs   (list ::TestChannel2 ::TestChannel3)
-                                     node-properties/outputs  (list ::TestChannel1 ::TestChannel1)
-                                     node-properties/function (fn [x] (+ 3 x))
-                                     node-properties/fields   '(::t1 ::t2)))
+                                   node-properties/inputs   (list ::TestChannel2 ::TestChannel3)
+                                   node-properties/outputs  (list ::TestChannel1 ::TestChannel1)
+                                   node-properties/function (fn [x] (+ 3 x))
+                                   node-properties/fields   '(::t1 ::t2))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= node-exceptions/define-node-type (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/type-defined     (-> e ex-data node-exceptions/cause-keyword)))

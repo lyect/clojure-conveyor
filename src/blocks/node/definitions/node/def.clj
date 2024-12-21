@@ -7,11 +7,9 @@
 (defn define-base-node []
   (dosync
     (when-not (node-hierarchy/tree node-types/NodeT)
-      (alter node-hierarchy/tree #(assoc % node-types/NodeT {node-properties/type-name        node-types/NodeT
-                                                             node-properties/super-name       nil
-                                                             node-properties/inputs           nil
-                                                             node-properties/outputs          nil
-                                                             node-properties/function         nil
-                                                             node-properties/ready-validator  nil
-                                                             node-properties/inputs-validator nil
-                                                             node-properties/fields           base-node-fields/fields-list})))))
+      (alter node-hierarchy/tree #(assoc % node-types/NodeT {node-properties/type-name       node-types/NodeT
+                                                             node-properties/super-name      nil
+                                                             node-properties/inputs          nil
+                                                             node-properties/outputs         nil
+                                                             node-properties/function        nil
+                                                             node-properties/fields          base-node-fields/fields-list})))))

@@ -29,7 +29,6 @@
 (def set-output-connected   ::type-set-output-connected)
 (def output-connected       ::type-output-connected)
 (def all-outputs-connected  ::type-all-outputs-connected)
-(def run                    ::type-run)
 (def start                  ::type-start)
 
 (def ^:private type-list [get-vertex-property
@@ -44,7 +43,6 @@
                           set-output-connected
                           output-connected
                           all-outputs-connected
-                          run
                           start])
 
 ;; +----------------------+
@@ -56,12 +54,10 @@
 (def not-vertex                ::cause-not-vertex)
 (def not-node                  ::cause-not-node)
 (def vertex-properties-missing ::cause-vertex-properties-missing)
-(def unknown-channel           ::cause-unknown-channel)
 
 (def ^:private cause-list [not-vertex
                            not-node
-                           vertex-properties-missing
-                           unknown-channel])
+                           vertex-properties-missing])
 
 ;; +---------------------------------------------------+
 ;; |                                                   |
@@ -82,7 +78,6 @@
                                             set-output-connected   [not-vertex]
                                             output-connected       [not-vertex]
                                             all-outputs-connected  [not-vertex]
-                                            run                    [unknown-channel]
                                             start                  [not-vertex]})
 
 ;; +---------------------------+

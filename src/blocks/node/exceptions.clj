@@ -62,7 +62,6 @@
 (def inputs-validator-undefined ::cause-inputs-validator-undefined)
 (def inputs-undefined           ::cause-inputs-undefined)
 (def outputs-undefined          ::cause-outputs-undefined)
-(def no-buffer-under-index      ::cause-no-buffer-under-index)
 
 (def ^:private cause-list [duplicating-fields
                            super-fields-intersection
@@ -84,8 +83,7 @@
                            ready-validator-undefined
                            inputs-validator-undefined
                            inputs-undefined
-                           outputs-undefined
-                           no-buffer-under-index])
+                           outputs-undefined])
 
 ;; +---------------------------------------------------+
 ;; |                                                   |
@@ -93,33 +91,32 @@
 ;; |                                                   |
 ;; +---------------------------------------------------+
 
-(def ^:private types-causes-correspondence {define-node-type [duplicating-fields
-                                                              super-fields-intersection
-                                                              node-properties-missing
-                                                              type-undeclared
-                                                              type-defined
-                                                              super-undeclared
-                                                              super-undefined
-                                                              inputs-unvalidated
-                                                              outputs-unvalidated
-                                                              function-unvalidated
-                                                              function-undefined
-                                                              ready-validator-undefined
-                                                              inputs-validator-undefined
-                                                              inputs-undefined
-                                                              outputs-undefined]
-                                            create           [duplicating-fields
-                                                              missing-fields
-                                                              excess-fields
-                                                              type-undeclared
-                                                              type-undefined
-                                                              abstract-creation]
+(def ^:private types-causes-correspondence {define-node-type  [duplicating-fields
+                                                               super-fields-intersection
+                                                               node-properties-missing
+                                                               type-undeclared
+                                                               type-defined
+                                                               super-undeclared
+                                                               super-undefined
+                                                               inputs-unvalidated
+                                                               outputs-unvalidated
+                                                               function-unvalidated
+                                                               function-undefined
+                                                               ready-validator-undefined
+                                                               inputs-validator-undefined
+                                                               inputs-undefined
+                                                               outputs-undefined]
+                                            create            [duplicating-fields
+                                                               missing-fields
+                                                               excess-fields
+                                                               type-undeclared
+                                                               type-undefined
+                                                               abstract-creation]
                                             get-node-property [not-node]
                                             get-node-field    [not-node
                                                                unknown-field]
                                             get-node-name     [not-node]
-                                            store             [not-node
-                                                               no-buffer-under-index]
+                                            store             [not-node]
                                             flush-output      [not-node]
                                             execute           [inputs-unvalidated]})
 

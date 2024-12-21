@@ -12,7 +12,7 @@
 
 (intern 'blocks.channel.types 'types-list [channel-types/ChannelT ::TestChannel ::DerivedTestChannel])
 
-(dosync (base-channel-def/define-base-channel))
+(base-channel-def/define-base-channel)
 
 (cljtest/deftest channel-define
   (cljtest/testing "Channel definition test"

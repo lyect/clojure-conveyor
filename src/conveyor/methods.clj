@@ -120,6 +120,7 @@
         edges-map     (initialize-edges-map vertices-refs edges)
         inputs        (initialize-inputs vertices-refs)
         outputs       (initialize-outputs vertices-refs)]
+    
     (alter conveyor-ref #(assoc % conveyor-properties/vertices vertices-refs))
     (alter conveyor-ref #(assoc % conveyor-properties/edges    edges-map))
     (alter conveyor-ref #(assoc % conveyor-properties/inputs   inputs))
@@ -137,50 +138,31 @@
 
 (defn- set-input-params
   [conv-ref input-params]
-  (a/go
     (doseq [[[vertex-index input-index] value] input-params]
-      (let [vertex (nth (get-conveyor-vertices conv-ref) vertex-index)
-            input  (nth (vertex-methods/get-vertex-inputs vertex) input-index)]
-        (>! input value)))))
+      (let [vertex-ref (nth (get-conveyor-vertices conv-ref) vertex-index)]
+        (a/go (>! (vertex-methods/get-vertex-input vertex-ref) [input-index value])))))
 
 (defn- get-outputs-map
-  [conv-ref]
-  (let [vertices (get-conveyor-vertices conv-ref)]
-    (reduce (fn [m v] (reduce #(assoc %1 %2 v) m (vertex-methods/get-vertex-outputs v))) {} vertices)))
-
-(defn- listen-outputs
-  [conv-ref]
-  (let [outputs (map (fn [[vertex-index output-index]]
-                       (let [vertex (nth (get-conveyor-vertices conv-ref) vertex-index)]
-                         (nth (vertex-methods/get-vertex-outputs vertex) output-index)))
-                     (get-conveyor-outputs conv-ref))]
-    (a/go
-      (while true
-        (let [[value output] (a/alts! outputs)]
-          (println (str "From " output " produced value: " value)))))))
+   [conv-ref]
+     (reduce
+      (fn [m vertex] (assoc m (vertex-methods/get-vertex-output vertex) vertex))
+      {}
+      (get-conveyor-vertices conv-ref)))
 
 (defn- run
   [conv-ref]
   (let [vertices (get-conveyor-vertices conv-ref)
         outputs-map (get-outputs-map conv-ref)]
-   (map vertex-methods/start vertices)
-   (-> (Thread. (fn [] (listen-outputs conv-ref))) .start)
+   (doall (map vertex-methods/start vertices))
    (a/go
      (while true
-       (let [[value output-ch] (a/alts! (keys outputs-map))
+       (let [[[output-index value] output-ch] (a/alts! (keys outputs-map))
              vertex-ref (outputs-map output-ch)
              vertex-index (.indexOf vertices vertex-ref)
-             output-index (.indexOf (vertex-methods/get-vertex-outputs vertex-ref) output-ch)]
-         (when (= vertex-index -1)
-           (throw (conveyor-exceptions/construct conveyor-exceptions/run conveyor-exceptions/unknown-vertex
-                                                 (str "Work with unknown vertex \"" vertex-ref "\""))))
-         (when (= output-index -1)
-           (throw (conveyor-exceptions/construct conveyor-exceptions/run conveyor-exceptions/unknown-channel
-                                                 (str "Got value \"" value "\" from unknown channel \"" output-ch "\""))))
-         (let [edge ((get-conveyor-edges conv-ref) [vertex-index output-index])
-               vertex-consumer-ref (nth (get-conveyor-vertices conv-ref) (first edge))
-               vertex-consumer-input (nth (vertex-methods/get-vertex-inputs vertex-consumer-ref) (second edge))]
-           (>! vertex-consumer-input value)))))))
+             edge ((get-conveyor-edges conv-ref) [vertex-index output-index])
+             vertex-consumer-ref (nth (get-conveyor-vertices conv-ref) (first edge))]
+         
+         (>! (vertex-methods/get-vertex-input vertex-consumer-ref) [(second edge) value]))))))
 
 (defn start
   "Start _conv-ref_ with _input-params_: <[vertex input-channel-index] value>"
