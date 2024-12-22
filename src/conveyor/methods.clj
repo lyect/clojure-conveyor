@@ -135,12 +135,14 @@
 ;; |   CONVEYOR METHODS       |
 ;; |                          |
 ;; +--------------------------+
+(def ground-input ::ground)
 
 (defn- set-input-params
   [conv-ref input-params]
-    (doseq [[[vertex-index input-index] value] input-params]
-      (let [vertex-ref (nth (get-conveyor-vertices conv-ref) vertex-index)]
-        (a/go (>! (vertex-methods/get-vertex-input vertex-ref) [input-index value])))))
+    (let [input-params (filter #(not (= (second %) ground-input)) input-params)]
+      (doseq [[[vertex-index input-index] value] input-params]
+        (let [vertex-ref (nth (get-conveyor-vertices conv-ref) vertex-index)]
+          (a/go (>! (vertex-methods/get-vertex-input vertex-ref) [input-index value]))))))
 
 (defn- get-outputs-map
    [conv-ref]
