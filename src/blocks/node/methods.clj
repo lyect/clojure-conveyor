@@ -41,12 +41,14 @@
 
 ;; No need to check whether "node" is a correct node or not
 ;; It will be done inside "get-node-property"
-(def get-node-type-name  (memoize (fn [node-ref] (get-node-property node-ref node-properties/type-name))))
-(def get-node-super-name (memoize (fn [node-ref] (get-node-property node-ref node-properties/super-name))))
-(def get-node-inputs     (memoize (fn [node-ref] (get-node-property node-ref node-properties/inputs))))
-(def get-node-outputs    (memoize (fn [node-ref] (get-node-property node-ref node-properties/outputs))))
-(def get-node-function   (memoize (fn [node-ref] (get-node-property node-ref node-properties/function))))
-(def get-node-fields     (memoize (fn [node-ref] (remove (set base-node-fields/fields-list) (get-node-property node-ref node-properties/fields)))))
+(def get-node-type-name       (memoize (fn [node-ref] (get-node-property node-ref node-properties/type-name))))
+(def get-node-super-name      (memoize (fn [node-ref] (get-node-property node-ref node-properties/super-name))))
+(def get-node-inputs          (memoize (fn [node-ref] (get-node-property node-ref node-properties/inputs))))
+(def get-node-outputs         (memoize (fn [node-ref] (get-node-property node-ref node-properties/outputs))))
+(def get-node-ready-validator (memoize (fn [node-ref] (get-node-property node-ref node-properties/ready-validator))))
+(def get-node-function        (memoize (fn [node-ref] (get-node-property node-ref node-properties/function))))
+(def get-node-fields          (memoize (fn [node-ref] (remove (set base-node-fields/fields-list)
+                                                              (get-node-property node-ref node-properties/fields)))))
 
 ;; +---------------------------------+
 ;; |                                 |
@@ -92,7 +94,7 @@
   (when-not (node-types/defined? node-type-name)
     (throw (node-exceptions/construct node-exceptions/create node-exceptions/type-undefined
                                          (str "Type named \"" node-type-name "\" is undefined"))))
-  (when (= node-type-name node-types/NodeT)
+  (when (node-types/abstract? node-type-name)
     (throw (node-exceptions/construct node-exceptions/create node-exceptions/abstract-creation
                                          (str "Unable to instantiate abstract node"))))
   (let [fields-map           (apply hash-map fields)
@@ -159,16 +161,7 @@
     (ref-set output-buffer-ref [])
     output-buffer))
 
-(defn- ready?
-  [node-ref]
-  (reduce
-   (fn [res [input-buffer-amount input-buffer-ref]]
-     (and res (<= input-buffer-amount (count @input-buffer-ref))))
-   true
-   (utils/zip (node-ref base-node-fields/input-buffers-amounts) (node-ref base-node-fields/input-buffers))))
-
 (defn execute
   [node-ref]
-  (while (ready? node-ref)
+  (while ((get-node-ready-validator node-ref) node-ref)
     ((get-node-function node-ref) node-ref)))
-
