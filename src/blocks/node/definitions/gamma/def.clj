@@ -28,8 +28,8 @@
     (image-channel-def/define-image-channel)
     (number-channel-def/define-number-channel)
     (node-base/define-node-type node-types/GammaT
-      node-properties/inputs   [channel-types/ImageT
-                                channel-types/NumberT]
+      node-properties/inputs   [channel-types/NumberT
+                                channel-types/ImageT]
       node-properties/outputs  [channel-types/ImageT]
       node-properties/function gamma-node-function
       node-properties/fields   gamma-node-fields/fields-list)))
