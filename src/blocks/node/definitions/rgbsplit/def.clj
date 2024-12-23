@@ -18,10 +18,10 @@
         g-output-buffer-ref (nth (node-ref base-node-fields/output-buffers) 1)
         b-output-buffer-ref (nth (node-ref base-node-fields/output-buffers) 2)
         image               (first @input-buffer-ref)
-        width               (channel-methods/get-channel-field @image image-channel-fields/width)
-        height              (channel-methods/get-channel-field @image image-channel-fields/height)]
+        width               (channel-methods/get-channel-field image image-channel-fields/width)
+        height              (channel-methods/get-channel-field image image-channel-fields/height)]
     (alter input-buffer-ref #(rest %))
-    (println (str "[" (node-methods/get-node-name node-ref) "]: RGBSplit done for Image()"))
+    (println (str "[" (node-methods/get-node-name node-ref) "]: RGBSplit done for Image: " @image))
     (alter r-output-buffer-ref #(conj % (channel-methods/create channel-types/BitmapT
                                                                 image-channel-fields/width  width
                                                                 image-channel-fields/height height)))
