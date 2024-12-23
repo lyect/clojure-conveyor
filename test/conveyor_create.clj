@@ -10,6 +10,7 @@
             [blocks.node.definitions.gamma.def        :as gamma-node-def]
             [blocks.node.definitions.image2bitmap.def :as image2bitmap-node-def]
             [blocks.node.definitions.image2image.def  :as image2image-node-def]
+            [blocks.node.definitions.rgbsplit.def     :as rgbsplit-node-def]
             [blocks.node.methods                      :as node-methods]
             [blocks.node.types                        :as node-types]
             [blocks.vertex.methods                    :as vertex-methods]
@@ -20,9 +21,10 @@
 
 (png-channel-def/define-png-channel)
 (float-channel-def/define-float-channel)
+(gamma-node-def/define-gamma-node)
 (image2bitmap-node-def/define-image2bitmap-node)
 (image2image-node-def/define-image2image-node)
-(gamma-node-def/define-gamma-node)
+(rgbsplit-node-def/define-rgbsplit-node)
 
 (defn- listen-outputs
   [conv-ref n_listens]
@@ -107,5 +109,38 @@
       (let [thread (Thread. (fn [] (listen-outputs conveyor 1)))]
         (.start thread)
         (.join thread)))))
+
+(cljtest/deftest conveyor-with-many-outputs
+  (cljtest/testing "Create conveyor with 3 outputs"
+    (let [nodes             [(dosync (node-methods/create node-types/Image2BitmapT "PNG2Bitmap"))
+                             (dosync (node-methods/create node-types/RGBSplitT  "RGBSplit"))]
+          edges             [(dosync (edge-methods/create 0 0 1 0))]
+          conveyor          (dosync (conveyor-methods/create nodes edges))
+          conveyor-vertices (conveyor-methods/get-conveyor-vertices conveyor)
+          conveyor-edges    (conveyor-methods/get-conveyor-edges conveyor)
+          conveyor-inputs   (conveyor-methods/get-conveyor-inputs conveyor)
+          conveyor-outputs  (conveyor-methods/get-conveyor-outputs conveyor)
+          image (dosync (channel-methods/create channel-types/PngT
+                                                image-channel-fields/width 200
+                                                image-channel-fields/height 350
+                                                png-channel-fields/alpha-used false))]
+
+      (cljtest/is (= (count conveyor-vertices) 2))
+      (cljtest/is (= (count @conveyor-edges) 1))
+      (cljtest/is (utils/lists-equal? (conveyor-edges [0 0]) [1 0]))
+
+      (cljtest/is (= (count conveyor-inputs) 1))
+      (cljtest/is (utils/lists-equal? (nth conveyor-inputs 0) [0 0]))
+
+      (cljtest/is (= (count conveyor-outputs) 3))
+      (cljtest/is (utils/lists-equal? (nth conveyor-outputs 0) [1 0]))
+      (cljtest/is (utils/lists-equal? (nth conveyor-outputs 1) [1 1]))
+      (cljtest/is (utils/lists-equal? (nth conveyor-outputs 2) [1 2]))
+
+      (let [thread (Thread. (fn [] (listen-outputs conveyor 3)))]
+        (.start thread)
+        (conveyor-methods/start conveyor {[0 0] image})
+        (.join thread))
+      )))
 
 (cljtest/run-tests 'conveyor-create)
