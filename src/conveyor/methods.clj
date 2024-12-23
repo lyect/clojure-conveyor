@@ -85,14 +85,12 @@
   [vertices-refs]
   (reduce
    (fn [conveyor-inputs [vertex-index vertex-ref]]
-     (if-not (vertex-methods/all-inputs-connected? vertex-ref)
-       (into conveyor-inputs
-             (map
-              #(vector vertex-index %)
-              (filter
+     (into conveyor-inputs
+           (map
+             #(vector vertex-index %)
+             (filter
                #(not (vertex-methods/input-connected? vertex-ref %))
-               (range (vertex-methods/get-node-inputs-count vertex-ref)))))
-        conveyor-inputs))
+               (range (vertex-methods/get-node-inputs-count vertex-ref))))))
    []
    (keep-indexed vector vertices-refs)))
 
@@ -156,15 +154,16 @@
   (let [vertices (get-conveyor-vertices conv-ref)
         outputs-map (get-outputs-map conv-ref)]
    (doall (map vertex-methods/start vertices))
-   (a/go
-     (while true
-       (let [[[output-index value] output-ch] (a/alts! (keys outputs-map))
-             vertex-ref (outputs-map output-ch)
-             vertex-index (.indexOf vertices vertex-ref)
-             edge ((get-conveyor-edges conv-ref) [vertex-index output-index])
-             vertex-consumer-ref (nth (get-conveyor-vertices conv-ref) (first edge))]
-         
-         (>! (vertex-methods/get-vertex-input vertex-consumer-ref) [(second edge) value]))))))
+   (try (a/go
+          (while true
+            (let [[[output-index value] output-ch] (a/alts! (keys outputs-map))
+                  vertex-ref (outputs-map output-ch)
+                  vertex-index (.indexOf vertices vertex-ref)
+                  edge ((get-conveyor-edges conv-ref) [vertex-index output-index])
+                  vertex-consumer-ref (nth (get-conveyor-vertices conv-ref) (first edge))]
+
+              (>! (vertex-methods/get-vertex-input vertex-consumer-ref) [(second edge) value]))))
+        (catch NullPointerException e (println (str "ERROR: " e))))))
 
 (defn start
   "Start _conv-ref_ with _input-params_: <[vertex input-channel-index] value>"
