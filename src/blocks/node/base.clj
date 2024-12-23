@@ -77,21 +77,23 @@
        (when-not (empty? (cljset/intersection new-type-fields-set# super-fields-set#))
          (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/super-fields-intersection
                                            (str "Fields of type named \"" ~new-node-type-name "\" intersect with fields of super type named \"" super-name# "\""))))
-       (when-not (or (properties-map# node-properties/inputs) (super# node-properties/inputs))
-         (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/inputs-undefined
-                                           (str "Inputs of type named \"" ~new-node-type-name "\" are undefined (neither type nor super have defined inputs)"))))
-       (when-not (or (properties-map# node-properties/outputs) (super# node-properties/outputs))
-         (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/outputs-undefined
-                                           (str "Outputs of type named \"" ~new-node-type-name "\" are undefined (neither type nor super have defined outputs)"))))
-       (when-not (or (properties-map# node-properties/function) (super# node-properties/function))
-         (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/function-undefined
-                                           (str "Function of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined function)"))))
+       (when-not (node-types/abstract? ~new-node-type-name)
+         (when-not (or (properties-map# node-properties/inputs) (super# node-properties/inputs))
+           (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/inputs-undefined
+                                             (str "Inputs of type named \"" ~new-node-type-name "\" are undefined (neither type nor super have defined inputs)"))))
+         (when-not (or (properties-map# node-properties/outputs) (super# node-properties/outputs))
+           (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/outputs-undefined
+                                             (str "Outputs of type named \"" ~new-node-type-name "\" are undefined (neither type nor super have defined outputs)"))))
+         (when-not (or (properties-map# node-properties/function) (super# node-properties/function))
+           (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/function-undefined
+                                             (str "Function of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined function)")))))
        (append-node-hierarchy {node-properties/type-name  ~new-node-type-name
                                node-properties/super-name super-name#
-                               node-properties/inputs           (or     (properties-map# node-properties/inputs)   (super# node-properties/inputs))
-                               node-properties/outputs          (or     (properties-map# node-properties/outputs)  (super# node-properties/outputs))
-                               node-properties/function         (or     (properties-map# node-properties/function) (super# node-properties/function))
-                               node-properties/fields           (concat new-type-fields# super-fields#)})
+                               node-properties/inputs          (or     (properties-map# node-properties/inputs)   (super# node-properties/inputs))
+                               node-properties/outputs         (or     (properties-map# node-properties/outputs)  (super# node-properties/outputs))
+                               node-properties/ready-validator (or     (properties-map# node-properties/ready-validator) (super# node-properties/ready-validator))
+                               node-properties/function        (or     (properties-map# node-properties/function) (super# node-properties/function))
+                               node-properties/fields          (concat new-type-fields# super-fields#)})
        (when-not (utils/lists-equal? node-properties/properties-list (keys (node-hierarchy/tree ~new-node-type-name)))
          (dosync (alter node-hierarchy/tree #(dissoc % ~new-node-type-name)))
          (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/node-properties-missing

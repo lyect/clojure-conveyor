@@ -85,14 +85,12 @@
   [vertices-refs]
   (reduce
    (fn [conveyor-inputs [vertex-index vertex-ref]]
-     (if-not (vertex-methods/all-inputs-connected? vertex-ref)
-       (into conveyor-inputs
-             (map
-              #(vector vertex-index %)
-              (filter
+     (into conveyor-inputs
+           (map
+             #(vector vertex-index %)
+             (filter
                #(not (vertex-methods/input-connected? vertex-ref %))
-               (range (vertex-methods/get-node-inputs-count vertex-ref)))))
-        conveyor-inputs))
+               (range (vertex-methods/get-node-inputs-count vertex-ref))))))
    []
    (keep-indexed vector vertices-refs)))
 
@@ -135,12 +133,14 @@
 ;; |   CONVEYOR METHODS       |
 ;; |                          |
 ;; +--------------------------+
+(def ground-input ::ground)
 
 (defn- set-input-params
   [conv-ref input-params]
-    (doseq [[[vertex-index input-index] value] input-params]
-      (let [vertex-ref (nth (get-conveyor-vertices conv-ref) vertex-index)]
-        (a/go (>! (vertex-methods/get-vertex-input vertex-ref) [input-index value])))))
+    (let [input-params (filter #(not (= (second %) ground-input)) input-params)]
+      (doseq [[[vertex-index input-index] value] input-params]
+        (let [vertex-ref (nth (get-conveyor-vertices conv-ref) vertex-index)]
+          (a/go (>! (vertex-methods/get-vertex-input vertex-ref) [input-index value]))))))
 
 (defn- get-outputs-map
    [conv-ref]
@@ -161,7 +161,7 @@
              vertex-index (.indexOf vertices vertex-ref)
              edge ((get-conveyor-edges conv-ref) [vertex-index output-index])
              vertex-consumer-ref (nth (get-conveyor-vertices conv-ref) (first edge))]
-         
+
          (>! (vertex-methods/get-vertex-input vertex-consumer-ref) [(second edge) value]))))))
 
 (defn start
