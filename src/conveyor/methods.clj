@@ -154,16 +154,15 @@
   (let [vertices (get-conveyor-vertices conv-ref)
         outputs-map (get-outputs-map conv-ref)]
    (doall (map vertex-methods/start vertices))
-   (try (a/go
-          (while true
-            (let [[[output-index value] output-ch] (a/alts! (keys outputs-map))
-                  vertex-ref (outputs-map output-ch)
-                  vertex-index (.indexOf vertices vertex-ref)
-                  edge ((get-conveyor-edges conv-ref) [vertex-index output-index])
-                  vertex-consumer-ref (nth (get-conveyor-vertices conv-ref) (first edge))]
+   (a/go
+     (while true
+       (let [[[output-index value] output-ch] (a/alts! (keys outputs-map))
+             vertex-ref (outputs-map output-ch)
+             vertex-index (.indexOf vertices vertex-ref)
+             edge ((get-conveyor-edges conv-ref) [vertex-index output-index])
+             vertex-consumer-ref (nth (get-conveyor-vertices conv-ref) (first edge))]
 
-              (>! (vertex-methods/get-vertex-input vertex-consumer-ref) [(second edge) value]))))
-        (catch NullPointerException e (println (str "ERROR: " e))))))
+         (>! (vertex-methods/get-vertex-input vertex-consumer-ref) [(second edge) value]))))))
 
 (defn start
   "Start _conv-ref_ with _input-params_: <[vertex input-channel-index] value>"
