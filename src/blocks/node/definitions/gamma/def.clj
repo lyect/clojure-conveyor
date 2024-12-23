@@ -12,14 +12,14 @@
 
 (defn- gamma-node-function
   [node-ref]
-  (let [i-input-buffer-ref (nth (node-ref base-node-fields/input-buffers)  0)
-        g-input-buffer-ref (nth (node-ref base-node-fields/input-buffers)  1)
+  (let [i-input-buffer-ref (nth (node-ref base-node-fields/input-buffers)  1)
+        g-input-buffer-ref (nth (node-ref base-node-fields/input-buffers)  0)
         output-buffer-ref  (nth (node-ref base-node-fields/output-buffers) 0)
         image              (first @i-input-buffer-ref)
         gamma              (first @g-input-buffer-ref)]
     (alter i-input-buffer-ref #(rest %))
     (alter g-input-buffer-ref #(rest %))
-    (println (str "[" (node-methods/get-node-name node-ref) "]: Gamma correction done with gamma=" gamma))
+    (println (str "[" (node-methods/get-node-name node-ref) "]: Gamma correction done with gamma = " @gamma))
     (alter output-buffer-ref #(conj % image))))
 
 (defn define-gamma-node []
