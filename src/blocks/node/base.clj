@@ -7,26 +7,34 @@
             [blocks.node.types                   :as node-types]
             [utils]))
 
+
 ;; +---------------------+
 ;; |                     |
 ;; |   NODE VALIDATORS   |
 ;; |                     |
 ;; +---------------------+
 
-(defn- validate-function [function]
-  (fn? function))
-
-(defn- validate-inputs [inputs]
+(defn- validate-inputs
+  [inputs]
   (reduce
-   #(and %1 (utils/in-list? channel-types/types-list %2))
+   #(and %1 (channel-types/declared? %2))
    true
    inputs))
 
-(defn- validate-outputs [outputs]
+(defn- validate-outputs
+  [outputs]
   (reduce
-   #(and %1 (utils/in-list? channel-types/types-list %2))
+   #(and %1 (channel-types/declared? %2))
    true
    outputs))
+
+(defn- validate-ready-validator
+  [ready-validator]
+  (fn? ready-validator))
+
+(defn- validate-function
+  [function]
+  (fn? function))
 
 ;; +------------------------------------------+
 ;; |                                          |
@@ -35,35 +43,36 @@
 ;; +------------------------------------------+
 
 (defn append-node-hierarchy
-  "Alter tree hierarchy with _new-node-type_ if not defined and super is defined"
   [new-node-type]
   (let [new-node-type-name (new-node-type node-properties/type-name)]
-    (when (node-hierarchy/tree new-node-type-name)
-      (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/type-defined
-                                        (str "Type named \"" new-node-type-name "\" is already defined"))))
     (when-not (validate-inputs (new-node-type node-properties/inputs))
       (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/inputs-unvalidated
                                         (str "Inputs of type named \"" new-node-type-name "\" are unvalidated"))))
     (when-not (validate-outputs (new-node-type node-properties/outputs))
       (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/outputs-unvalidated
                                         (str "Outputs of type named \"" new-node-type-name "\" are unvalidated"))))
+    (when-not (validate-ready-validator (new-node-type node-properties/ready-validator))
+      (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/ready-validator-unvalidated
+                                        (str "Ready validator of type named \"" new-node-type-name " is unvalidated"))))
     (when-not (validate-function (new-node-type node-properties/function))
       (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/function-unvalidated
                                         (str "Function of type named \"" new-node-type-name " is unvalidated"))))
     (dosync (alter node-hierarchy/tree #(assoc % new-node-type-name new-node-type)))))
 
 (defmacro define-node-type
-  "Define a node with _type-name_ and _properties_"
   [new-node-type-name & properties]
   `(let [properties-map# (hash-map ~@properties)
          super-name#     (or (properties-map# node-properties/super-name) node-types/NodeT)]
-     (when-not (utils/in-list? node-types/types-list ~new-node-type-name)
+     (when-not (node-types/declared? ~new-node-type-name)
        (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/type-undeclared
-                                         (str "Type with name \"" ~new-node-type-name "\" is not declared"))))
-     (when-not (utils/in-list? node-types/types-list super-name#)
+                                         (str "Type named \"" ~new-node-type-name "\" is undeclared"))))
+     (when (node-types/defined? ~new-node-type-name)
+       (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/type-defined
+                                         (str "Type named \"" ~new-node-type-name "\" is already defined"))))
+     (when-not (node-types/declared? super-name#)
        (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/super-undeclared
                                          (str "Super \"" super-name# "\" of \"" ~new-node-type-name "\" is undeclared"))))
-     (when-not (node-hierarchy/tree super-name#)
+     (when-not (node-types/defined? super-name#)
        (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/super-undefined
                                          (str "Super \"" super-name# "\" of \"" ~new-node-type-name "\" is undefined"))))
      (let [super#               (node-hierarchy/tree super-name#)
@@ -84,15 +93,18 @@
          (when-not (or (properties-map# node-properties/outputs) (super# node-properties/outputs))
            (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/outputs-undefined
                                              (str "Outputs of type named \"" ~new-node-type-name "\" are undefined (neither type nor super have defined outputs)"))))
+         (when-not (or (properties-map# node-properties/ready-validator) (super# node-properties/ready-validator))
+           (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/ready-validator-undefined
+                                             (str "Ready validator of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined ready validator)"))))
          (when-not (or (properties-map# node-properties/function) (super# node-properties/function))
            (throw (node-exceptions/construct node-exceptions/define-node-type node-exceptions/function-undefined
                                              (str "Function of type named \"" ~new-node-type-name "\" is undefined (neither type nor super have defined function)")))))
-       (append-node-hierarchy {node-properties/type-name  ~new-node-type-name
-                               node-properties/super-name super-name#
-                               node-properties/inputs          (or     (properties-map# node-properties/inputs)   (super# node-properties/inputs))
-                               node-properties/outputs         (or     (properties-map# node-properties/outputs)  (super# node-properties/outputs))
-                               node-properties/ready-validator (or     (properties-map# node-properties/ready-validator) (super# node-properties/ready-validator))
-                               node-properties/function        (or     (properties-map# node-properties/function) (super# node-properties/function))
+       (append-node-hierarchy {node-properties/type-name       ~new-node-type-name
+                               node-properties/super-name      super-name#
+                               node-properties/inputs          (or (properties-map# node-properties/inputs)          (super# node-properties/inputs))
+                               node-properties/outputs         (or (properties-map# node-properties/outputs)         (super# node-properties/outputs))
+                               node-properties/ready-validator (or (properties-map# node-properties/ready-validator) (super# node-properties/ready-validator))
+                               node-properties/function        (or (properties-map# node-properties/function)        (super# node-properties/function))
                                node-properties/fields          (concat new-type-fields# super-fields#)})
        (when-not (utils/lists-equal? node-properties/properties-list (keys (node-hierarchy/tree ~new-node-type-name)))
          (dosync (alter node-hierarchy/tree #(dissoc % ~new-node-type-name)))

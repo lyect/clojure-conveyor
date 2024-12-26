@@ -28,14 +28,14 @@
 
 (defn- listen-outputs
   [conv-ref n_listens]
-  (let [outputs (map (fn [[vertex-index output-index]]
+  (let [outputs (map (fn [[vertex-index _]]
                        (vertex-methods/get-vertex-output
                         (nth (conveyor-methods/get-conveyor-vertices conv-ref) vertex-index)))
                      (conveyor-methods/get-conveyor-outputs conv-ref))]
         (loop [counter 0]
           (when (< counter n_listens)
             (println (str "Listening... (" (+ counter 1) "/" n_listens ")"))
-            (let [[[output-index value] output] (a/alts!! outputs)]
+            (let [[[output-index value] _] (a/alts!! outputs)]
               (println (str "From channel " output-index ":"))
               (println (str "\tValue: " @value)))
             (recur (inc counter))))))
@@ -67,7 +67,7 @@
        (cljtest/is (= (count conveyor-outputs) 1))
        (cljtest/is (utils/lists-equal? (nth conveyor-outputs 0) [1 0]))
 
-       (conveyor-methods/start conveyor {[0 0] image
+       (conveyor-methods/store conveyor {[0 0] image
                                          [1 0] gamma})
        
        (let [thread (Thread. (fn [] (listen-outputs conveyor 1)))]
@@ -101,10 +101,8 @@
       (cljtest/is (= (count conveyor-outputs) 1))
       (cljtest/is (utils/lists-equal? (nth conveyor-outputs 0) [1 0]))
 
-      (conveyor-methods/start conveyor {[0 0] image
-                                        [1 0] conveyor-methods/ground-input
-                                        [1 1] conveyor-methods/ground-input
-                                        })
+      (conveyor-methods/start conveyor)
+      (conveyor-methods/store conveyor {[0 0] image})
 
       (let [thread (Thread. (fn [] (listen-outputs conveyor 1)))]
         (.start thread)

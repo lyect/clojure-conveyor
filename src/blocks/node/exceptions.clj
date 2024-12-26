@@ -41,27 +41,27 @@
 ;; |                      |
 ;; +----------------------+
 
-(def duplicating-fields         ::cause-duplicating-fields)
-(def super-fields-intersection  ::cause-super-fields-intersection)
-(def node-properties-missing    ::cause-node-properties-missing)
-(def missing-fields             ::cause-missing-fields)
-(def excess-fields              ::cause-excess-fields)
-(def type-undeclared            ::cause-type-undeclared)
-(def type-defined               ::cause-type-defined)
-(def super-undeclared           ::cause-super-undeclared)
-(def super-undefined            ::cause-super-undefined)
-(def inputs-unvalidated         ::cause-inputs-unvalidated)
-(def outputs-unvalidated        ::cause-outputs-unvalidated)
-(def function-unvalidated       ::cause-function-unvalidated)
-(def not-node                   ::cause-not-node)
-(def type-undefined             ::cause-type-undefined)
-(def unknown-field              ::cause-unknown-field)
-(def abstract-creation          ::cause-abstract-creation)
-(def function-undefined         ::cause-function-undefined)
-(def ready-validator-undefined  ::cause-ready-validator-undefined)
-(def inputs-validator-undefined ::cause-inputs-validator-undefined)
-(def inputs-undefined           ::cause-inputs-undefined)
-(def outputs-undefined          ::cause-outputs-undefined)
+(def duplicating-fields          ::cause-duplicating-fields)
+(def super-fields-intersection   ::cause-super-fields-intersection)
+(def node-properties-missing     ::cause-node-properties-missing)
+(def missing-fields              ::cause-missing-fields)
+(def excess-fields               ::cause-excess-fields)
+(def type-undeclared             ::cause-type-undeclared)
+(def type-defined                ::cause-type-defined)
+(def super-undeclared            ::cause-super-undeclared)
+(def super-undefined             ::cause-super-undefined)
+(def inputs-unvalidated          ::cause-inputs-unvalidated)
+(def outputs-unvalidated         ::cause-outputs-unvalidated)
+(def function-unvalidated        ::cause-function-unvalidated)
+(def not-node                    ::cause-not-node)
+(def type-undefined              ::cause-type-undefined)
+(def unknown-field               ::cause-unknown-field)
+(def abstract-creation           ::cause-abstract-creation)
+(def function-undefined          ::cause-function-undefined)
+(def ready-validator-undefined   ::cause-ready-validator-undefined)
+(def inputs-undefined            ::cause-inputs-undefined)
+(def outputs-undefined           ::cause-outputs-undefined)
+(def ready-validator-unvalidated ::cause-ready-validator-unvalidated)
 
 (def ^:private cause-list [duplicating-fields
                            super-fields-intersection
@@ -81,9 +81,9 @@
                            abstract-creation
                            function-undefined
                            ready-validator-undefined
-                           inputs-validator-undefined
                            inputs-undefined
-                           outputs-undefined])
+                           outputs-undefined
+                           ready-validator-unvalidated])
 
 ;; +---------------------------------------------------+
 ;; |                                                   |
@@ -103,9 +103,9 @@
                                                                function-unvalidated
                                                                function-undefined
                                                                ready-validator-undefined
-                                                               inputs-validator-undefined
                                                                inputs-undefined
-                                                               outputs-undefined]
+                                                               outputs-undefined
+                                                               ready-validator-unvalidated]
                                             create            [duplicating-fields
                                                                missing-fields
                                                                excess-fields
@@ -117,8 +117,7 @@
                                                                unknown-field]
                                             get-node-name     [not-node]
                                             store             [not-node]
-                                            flush-output      [not-node]
-                                            execute           [inputs-unvalidated]})
+                                            flush-output      [not-node]})
 
 ;; +---------------------------+
 ;; |                           |
@@ -127,7 +126,6 @@
 ;; +---------------------------+
 
 (defn construct
-  "Construct exception with _type_, _cause_ and _message_"
   [type cause message]
   {:pre [(utils/in-list? type-list                          type)
          (utils/in-list? cause-list                         cause)

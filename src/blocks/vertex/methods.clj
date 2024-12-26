@@ -3,7 +3,7 @@
             [blocks.vertex.exceptions :as    vertex-exceptions]
             [blocks.vertex.properties :as    vertex-properties]
             [clojure.core.async       :as    a
-                                      :refer [>!!]]
+                                      :refer [>!]]
             [utils]))
 
 
@@ -14,7 +14,6 @@
 ;; +-------------------------------+
 
 (def vertex?
-  "Predicate to check whether _obj_ is vertex or not"
   (memoize
    (fn [obj-ref]
      (and (some? @obj-ref)
@@ -31,7 +30,6 @@
 ;; No need to check whether vertex has the property or not. get-vertex-property is a private function,
 ;; hence it is used only for specific properties
 (defn- get-vertex-property
-  "Get property's value of _vertex_ by _property-name_"
   [vertex-ref property-name]
   (when-not (vertex? vertex-ref)
     (throw (vertex-exceptions/construct vertex-exceptions/get-vertex-property vertex-exceptions/not-vertex
@@ -52,18 +50,15 @@
 
 ;; No need to check whether "node" is correct node or not, since it is evaluated within "create" function
 (defn- initialize-inputs-connectivity
-  "Get connectivity status for each _node_'s input"
   [node-ref]
   (into [] (repeat (count (node-methods/get-node-inputs node-ref)) false)))
 
 ;; No need to check whether "node" is correct node or not, since it is evaluated within "create" function
 (defn- initialize-outputs-connectivity
-  "Get connectivity status for each _node_'s output"
   [node-ref]
   (into [] (repeat (count (node-methods/get-node-outputs node-ref)) false)))
 
 (defn create
-  "Create vertex from _node_"
   [node-ref]
   (when-not (node-methods/node? node-ref)
     (throw (vertex-exceptions/construct vertex-exceptions/create vertex-exceptions/not-node
@@ -97,7 +92,6 @@
      (alter ~vertex-ref #(assoc % ~io-properties-property (assoc io-properties# ~io-property-index true)))))
 
 (defmacro ^:private io-property-set?
-  "Return usage of _vertex_' input under _input-index_"
   [io-properties-property ; Property of vertex
    exceptions-type
    vertex-ref
@@ -111,7 +105,7 @@
 (defmacro ^:private all-io-properties-set?
   [io-properties-property ; Property of vertex
    exceptions-type
-   vertex-ref]                ; Index of property in io-properties]
+   vertex-ref]            ; Index of property in io-properties
   `(when-not (vertex? ~vertex-ref)
     (throw (vertex-exceptions/construct ~exceptions-type vertex-exceptions/not-vertex
                                         (str "\"" ~vertex-ref "\" is not a vertex"))))
@@ -124,7 +118,6 @@
 ;; +---------------------------------+
 
 (defn set-input-connected
-  "Set connectivity of _vertex_' input under _input-index_ to true"
   [vertex-ref input-index]
   (set-io-property vertex-properties/inputs-connectivity
                    vertex-exceptions/set-input-connected
@@ -132,7 +125,6 @@
                    input-index))
 
 (defn input-connected?
-  "Return connectivity of _vertex_' input under _input-index_"
   [vertex-ref input-index]
   (io-property-set? vertex-properties/inputs-connectivity
                     vertex-exceptions/input-connected
@@ -140,7 +132,6 @@
                     input-index))
 
 (defn all-inputs-connected?
-  "Return connectivity of _vertex_' inputs"
   [vertex-ref]
   (all-io-properties-set? vertex-properties/inputs-connectivity
                           vertex-exceptions/all-inputs-connected
@@ -153,7 +144,6 @@
 ;; +----------------------------------+
 
 (defn set-output-connected
-  "Set connectivity of _vertex_' output under _output-index_ to true"
   [vertex-ref output-index]
   (set-io-property vertex-properties/outputs-connectivity
                    vertex-exceptions/set-output-connected
@@ -161,7 +151,6 @@
                    output-index))
 
 (defn output-connected?
-  "Return connectivity of _vertex_' output under _output-index_"
   [vertex-ref output-index]
   (io-property-set? vertex-properties/outputs-connectivity
                     vertex-exceptions/output-connected
@@ -169,7 +158,6 @@
                     output-index))
 
 (defn all-outputs-connected?
-  "Return connectivity of _vertex_' outputs"
   [vertex-ref]
   (all-io-properties-set? vertex-properties/outputs-connectivity
                           vertex-exceptions/all-outputs-connected
@@ -182,7 +170,6 @@
 ;; +--------------------+
 
 (def get-node-input
-  "Get _vertex_' node input under _input-index_"
   (memoize
    (fn [vertex-ref input-index]
      (when-not (vertex? vertex-ref)
@@ -191,7 +178,6 @@
      (nth (node-methods/get-node-inputs (get-vertex-node vertex-ref)) input-index))))
 
 (def get-node-output
-  "Get _vertex_' node output under _output-index_"
   (memoize
    (fn [vertex-ref output-index]
      (when-not (vertex? vertex-ref)
@@ -200,7 +186,6 @@
      (nth (node-methods/get-node-outputs (get-vertex-node vertex-ref)) output-index))))
 
 (def get-node-inputs-count
-  "Get number of inputs in _vertex_"
   (memoize
    (fn [vertex-ref]
      (when-not (vertex? vertex-ref)
@@ -209,7 +194,6 @@
      (count (node-methods/get-node-inputs (get-vertex-node vertex-ref))))))
 
 (def get-node-outputs-count
-  "Get number of outputs in _vertex_"
   (memoize
    (fn [vertex-ref]
      (when-not (vertex? vertex-ref)
@@ -228,11 +212,9 @@
                       (node-methods/execute node-ref)
                       (doseq [output-index (range (get-node-outputs-count vertex-ref))]
                         (doseq [output-value (node-methods/flush-output node-ref output-index)]
-                          
-                          (>!! (vertex-ref vertex-properties/output) [output-index output-value]))))))))))
+                          (>! (vertex-ref vertex-properties/output) [output-index output-value]))))))))))
 
 (defn start
-  "Start async task for vertex"
   [vertex-ref]
   (when-not (vertex? vertex-ref)
     (throw (vertex-exceptions/construct vertex-exceptions/start vertex-exceptions/not-vertex

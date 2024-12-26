@@ -1,6 +1,8 @@
 (ns blocks.channel.types
-  (:require [blocks.channel.hierarchy  :as channel-hierarchy]
-            [blocks.channel.properties :as channel-properties]))
+  (:require [blocks.channel.exceptions :as channel-exceptions]
+            [blocks.channel.hierarchy  :as channel-hierarchy]
+            [blocks.channel.properties :as channel-properties]
+            [utils]))
 
 
 ;; +----------------------------+
@@ -33,7 +35,21 @@
 (def IntegerT ::channeltype-Integer)
 (def MatrixT  ::channeltype-Matrix)
 
-(def types-list [ChannelT ImageT NumberT JpegT PngT BitmapT FloatT IntegerT MatrixT])
+(def ^:private types-list [; Base type
+                           ChannelT
+                           ; Abstract types
+                           ImageT
+                           NumberT
+                           ; Derived types
+                           JpegT
+                           PngT
+                           BitmapT
+                           FloatT
+                           IntegerT
+                           MatrixT])
+
+(def ^:private abstract-types-list [ImageT
+                                    NumberT])
 
 ;; +-------------------------------------+
 ;; |                                     |
@@ -41,13 +57,22 @@
 ;; |                                     |
 ;; +-------------------------------------+
 
+(defn declared?
+  [type-keyword]
+  (utils/in-list? types-list type-keyword))
+
+(defn abstract?
+  [type-keyword]
+  (when-not (declared? type-keyword)
+    (throw (channel-exceptions/construct channel-exceptions/abstract channel-exceptions/type-undeclared
+                                         (str "Unable to check whether \"" type-keyword "\" is abstract or not since undeclared"))))
+  (utils/in-list? abstract-types-list type-keyword))
+
 (defn defined?
-  "Check whether channel type named as _type-keyword_ is defined or not"
   [type-keyword]
   (some? (channel-hierarchy/tree type-keyword)))
 
 (defn subtype?
-  "Check whether channel type named _channel-type-name1_ is subtype of channel type named _channel-type-name2_ or not"
   [channel-type-name1 channel-type-name2] 
   (cond (= channel-type-name1 channel-type-name2) true
         (= channel-type-name1 ChannelT) false

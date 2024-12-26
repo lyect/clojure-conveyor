@@ -14,12 +14,16 @@
             [utils]))
 
 
-(integer-channel-def/define-integer-channel)
-
-
 (intern 'blocks.node.types 'types-list [node-types/NodeT ::TestNode ::DerivedTestNode ::UndefinedTestNode])
 
-(base-node-def/define-base-node)
+
+(defn- test-node-ready-validator
+  [node-ref]
+  (reduce
+   (fn [res [input-buffer-amount input-buffer-ref]]
+     (and res (<= input-buffer-amount (count @input-buffer-ref))))
+   true
+   (utils/zip (node-ref base-node-fields/input-buffers-amounts) (node-ref base-node-fields/input-buffers))))
 
 (defn- test-node-function
   [node-ref]
@@ -56,12 +60,17 @@
                                                                                            (node-methods/get-node-field node-ref ::f1)
                                                                                            (nth (node-methods/get-node-field node-ref ::f4) 0)))))))
 
+(integer-channel-def/define-integer-channel)
+
+(base-node-def/define-base-node)
 
 (node-base/define-node-type ::TestNode
-                            node-properties/inputs   (list channel-types/NumberT channel-types/NumberT)
-                            node-properties/outputs  (list channel-types/NumberT)
-                            node-properties/function test-node-function
-                            node-properties/fields   '(::f1 ::f2 ::f3))
+                            node-properties/inputs          (list channel-types/NumberT channel-types/NumberT)
+                            node-properties/outputs         (list channel-types/NumberT)
+                            node-properties/ready-validator test-node-ready-validator
+                            node-properties/function        test-node-function
+                            node-properties/fields          '(::f1 ::f2 ::f3))
+
 (node-base/define-node-type ::DerivedTestNode
                             node-properties/super-name ::TestNode
                             node-properties/inputs     (list channel-types/NumberT channel-types/NumberT channel-types/NumberT)

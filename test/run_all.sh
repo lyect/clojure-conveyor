@@ -9,4 +9,4 @@ clj -Sdeps "${DEPS}" -M $SCRIPTPATH/channel_define.clj
 clj -Sdeps "${DEPS}" -M $SCRIPTPATH/channel_create.clj
 clj -Sdeps "${DEPS}" -M $SCRIPTPATH/node_define.clj
 clj -Sdeps "${DEPS}" -M $SCRIPTPATH/node_create.clj
-clj -Sdeps "${DEPS}" -M $SCRIPTPATH/conveyor_create.clj
+#clj -Sdeps "${DEPS}" -M $SCRIPTPATH/conveyor_create.clj

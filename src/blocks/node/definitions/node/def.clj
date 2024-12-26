@@ -2,7 +2,8 @@
   (:require [blocks.node.definitions.node.fields :as base-node-fields]
             [blocks.node.hierarchy               :as node-hierarchy]
             [blocks.node.properties              :as node-properties]
-            [blocks.node.types                   :as node-types]))
+            [blocks.node.types                   :as node-types]
+            [utils]))
 
 (defn- base-node-ready-validator [node-ref]
   (reduce
@@ -19,5 +20,5 @@
                                                              node-properties/inputs          nil
                                                              node-properties/outputs         nil
                                                              node-properties/ready-validator base-node-ready-validator
-                                                             node-properties/function        (fn [])
+                                                             node-properties/function        nil
                                                              node-properties/fields          base-node-fields/fields-list})))))

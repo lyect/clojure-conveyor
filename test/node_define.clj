@@ -1,8 +1,5 @@
 (ns node-define
   (:require [clojure.test                           :as cljtest]
-            [blocks.channel.base                    :as channel-base]
-            [blocks.channel.definitions.channel.def :as base-channel-def]
-            [blocks.channel.properties              :as channel-properties]
             [blocks.channel.types                   :as channel-types]
             [blocks.node.base                       :as node-base]
             [blocks.node.definitions.node.def       :as base-node-def]
@@ -15,18 +12,11 @@
 
 
 (intern 'blocks.channel.types 'types-list [channel-types/ChannelT ::TestChannel1 ::TestChannel2 ::TestChannel3])
-(intern 'blocks.node.types    'types-list [node-types/NodeT ::TestNode ::DerivedTestNode])
 
-(base-channel-def/define-base-channel)
+(intern 'blocks.node.types 'types-list [node-types/NodeT ::TestNode ::DerivedTestNode])
+
+
 (base-node-def/define-base-node)
-
-(channel-base/define-channel-type ::TestChannel1
-                                  channel-properties/fields '(::h ::w))
-(channel-base/define-channel-type ::TestChannel2
-                                  channel-properties/fields '(::x ::y))
-(channel-base/define-channel-type ::TestChannel3
-                                  channel-properties/super-name ::TestChannel1
-                                  channel-properties/fields     '(::c))
 
 
 (cljtest/deftest node-define
@@ -57,16 +47,15 @@
                                 node-properties/fields   '(::f1 ::f2 ::f3))
     (node-base/define-node-type ::DerivedTestNode
                                 node-properties/super-name ::TestNode
-                                node-properties/inputs     (list ::TestChannel3 ::TestChannel3)
-                                node-properties/outputs    (list ::TestChannel1 ::TestChannel2)
-                                node-properties/function   (fn [x] (+ x 10))
-                                node-properties/fields     '(::f4))
+                                node-properties/inputs   (list ::TestChannel3 ::TestChannel3)
+                                node-properties/function (fn [x] (+ x 10))
+                                node-properties/fields   '(::f4))
     (cljtest/is (node-types/defined? ::DerivedTestNode))
     (let [derived-test-node-type (node-hierarchy/tree ::DerivedTestNode)]
       (cljtest/is (=                  (derived-test-node-type node-properties/type-name)  ::DerivedTestNode))
       (cljtest/is (=                  (derived-test-node-type node-properties/super-name) ::TestNode))
       (cljtest/is (utils/lists-equal? (derived-test-node-type node-properties/inputs)     (list ::TestChannel3 ::TestChannel3)))
-      (cljtest/is (utils/lists-equal? (derived-test-node-type node-properties/outputs)    (list ::TestChannel1 ::TestChannel2)))
+      (cljtest/is (utils/lists-equal? (derived-test-node-type node-properties/outputs)    (list ::TestChannel3)))
       (cljtest/is (utils/lists-equal? (derived-test-node-type node-properties/fields)     (concat (list ::f1 ::f2 ::f3 ::f4) base-node-fields/fields-list))))
     (dosync (alter node-hierarchy/tree #(dissoc % ::TestNode)))
     (dosync (alter node-hierarchy/tree #(dissoc % ::DerivedTestNode)))
@@ -147,10 +136,7 @@
      (try
        (node-base/define-node-type ::DerivedTestNode
                                    node-properties/super-name ::TestNode
-                                   node-properties/inputs   (list ::TestChannel3 ::TestChannel3)
-                                   node-properties/outputs  (list ::TestChannel1 ::TestChannel2)
-                                   node-properties/function (fn [x] (+ x 10))
-                                   node-properties/fields   '(::f1))
+                                   node-properties/fields     '(::f1))
        (catch clojure.lang.ExceptionInfo e
          (if (and (= node-exceptions/define-node-type          (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/super-fields-intersection (-> e ex-data node-exceptions/cause-keyword)))
@@ -266,6 +252,25 @@
        (catch clojure.lang.ExceptionInfo e
          (if (and (= node-exceptions/define-node-type    (-> e ex-data node-exceptions/type-keyword))
                   (= node-exceptions/outputs-unvalidated (-> e ex-data node-exceptions/cause-keyword)))
+           true
+           false))))
+    (cljtest/is (and
+                 (node-hierarchy/tree node-types/NodeT)
+                 (= (count @node-hierarchy/tree) 1)))))
+
+(cljtest/deftest node-define-unvalidated-ready-validator
+  (cljtest/testing "Node with unvalidated ready validator definition test"
+    (cljtest/is
+     (try
+       (node-base/define-node-type ::TestNode
+                                   node-properties/inputs          (list ::TestChannel1)
+                                   node-properties/outputs         (list ::TestChannel2)
+                                   node-properties/ready-validator '(1)
+                                   node-properties/function        (fn [x] (nil? x))
+                                   node-properties/fields          '(::f1 ::f2 ::f3))
+       (catch clojure.lang.ExceptionInfo e
+         (if (and (= node-exceptions/define-node-type            (-> e ex-data node-exceptions/type-keyword))
+                  (= node-exceptions/ready-validator-unvalidated (-> e ex-data node-exceptions/cause-keyword)))
            true
            false))))
     (cljtest/is (and

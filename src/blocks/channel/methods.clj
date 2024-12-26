@@ -15,7 +15,6 @@
 ;; +--------------------------------+
 
 (def channel?
-  "Predicate to check whether _obj_ is channel or not"
   (memoize
    (fn [obj-ref]
      (and (some? @obj-ref)
@@ -35,7 +34,6 @@
 ;; No need to check whether channel has the property or not. get-channel-property is a private function,
 ;; hence it is used only for specific properties
 (defn- get-channel-property
-  "Get _property_ of _channel_"
   [channel-ref property]
   (when-not (channel? channel-ref)
     (throw (channel-exceptions/construct channel-exceptions/get-channel-property channel-exceptions/not-channel
@@ -55,7 +53,6 @@
 ;; +------------------------------------+
 
 (defn get-channel-field
-  "Get field's value of _channel_ by _field-name_"
   [channel-ref field-name]
   (when-not (channel? channel-ref)
     (throw (channel-exceptions/construct channel-exceptions/get-channel-field channel-exceptions/not-channel
@@ -74,20 +71,16 @@
 ;; +-------------------------+
 
 (defn create
-  "Create channel typed as _channel-type-name_, fills fields with _fields_.
-   _fields_ must be a collection consisting of pairs such as (f1 v1 f2 v2 ... fn vn)"
   [channel-type-name & fields]
-  (when-not (utils/in-list? channel-types/types-list channel-type-name)
+  (when-not (channel-types/declared? channel-type-name)
     (throw (channel-exceptions/construct channel-exceptions/create channel-exceptions/type-undeclared
                                          (str "Type named \"" channel-type-name "\" is undeclared"))))
+  (when (channel-types/abstract? channel-type-name)
+    (throw (channel-exceptions/construct channel-exceptions/create channel-exceptions/abstract-creation
+                                         (str "Unable to instantiate channel with abstract type " channel-type-name))))
   (when-not (channel-types/defined? channel-type-name)
     (throw (channel-exceptions/construct channel-exceptions/create channel-exceptions/type-undefined
                                           (str "Type named \"" channel-type-name "\" is undefined"))))
-  (when (or (= channel-type-name channel-types/ChannelT)
-            (= channel-type-name channel-types/ImageT)
-            (= channel-type-name channel-types/NumberT))
-    (throw (channel-exceptions/construct channel-exceptions/create channel-exceptions/abstract-creation
-                                         (str "Unable to instantiate abstract channel"))))
   (let [fields-map              (apply hash-map fields)
         channel-fields          (keys fields-map)
         channel-type-fields     (remove (set base-channel-fields/fields-list) ((channel-hierarchy/tree channel-type-name) channel-properties/fields))

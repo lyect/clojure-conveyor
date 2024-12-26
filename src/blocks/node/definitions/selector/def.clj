@@ -1,9 +1,11 @@
 (ns blocks.node.definitions.selector.def
-  (:require [blocks.node.base :as node-base]
-            [blocks.node.definitions.node.def :as base-node-def]
+  (:require [blocks.node.base                    :as node-base]
+            [blocks.node.definitions.node.def    :as base-node-def]
             [blocks.node.definitions.node.fields :as base-node-fields]
-            [blocks.node.properties :as node-properties]
-            [blocks.node.types :as node-types]))
+            [blocks.node.properties              :as node-properties]
+            [blocks.node.types                   :as node-types]
+            [utils]))
+
 
 (defn- selector-ready-validator [node-ref]
   (reduce

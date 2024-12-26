@@ -11,6 +11,7 @@
 
 (intern 'blocks.channel.types 'types-list [channel-types/ChannelT ::TestChannel1 ::TestChannel2 ::TestChannel3 ::UndefinedChannel])
 
+
 (base-channel-def/define-base-channel)
 
 (channel-base/define-channel-type ::TestChannel1

@@ -1,6 +1,5 @@
 (ns blocks.node.types
-  (:require [blocks.node.hierarchy  :as node-hierarchy]
-            [blocks.node.properties :as node-properties]
+  (:require [blocks.node.hierarchy :as node-hierarchy]
             [utils]))
 
 
@@ -36,27 +35,74 @@
 (def RGBSplitT     ::nodetype-RGBSplit)
 (def SharpenT      ::nodetype-Sharpen)
 
-(def types-list [NodeT SelectorT ConcatT CutT DenoiseT DifferenceT GammaT Image2BitmapT Image2ImageT RGBSplitT SharpenT])
-(def ^:private abstract-types-list [NodeT SelectorT])
+(def ^:private types-list [; Base type
+                           NodeT
+                           ; Abstract types
+                           SelectorT
+                           ; Derived types
+                           ConcatT
+                           CutT
+                           DenoiseT
+                           DifferenceT
+                           GammaT
+                           Image2BitmapT
+                           Image2ImageT
+                           RGBSplitT
+                           SharpenT])
+
+(def ^:private abstract-types-list [NodeT
+                                    SelectorT])
+
 ;; +-------------------------------------+
 ;; |                                     |
 ;; |   CHANNEL TYPE RELATED PREDICATES   |
 ;; |                                     |
 ;; +-------------------------------------+
+
+(defn declared?
+  [type-keyword]
+  (utils/in-list? types-list type-keyword))
+
 (defn abstract?
-  "Check whether node type named as _type-keyword_ is abstract type or not"
   [type-keyword]
   (utils/in-list? abstract-types-list type-keyword))
 
 (defn defined?
-  "Check whether node type named as _type-keyword_ is defined or not"
   [type-keyword]
   (some? (node-hierarchy/tree type-keyword)))
 
-(defn subtype?
-  "Check whether node type named _node-type-name1_ is subtype of node type named _node-type-name2_ or not"
-  [node-type-name1 node-type-name2] 
-  (cond (= node-type-name1 node-type-name2) true
-        (= node-type-name1 NodeT) false
-        :else (subtype? ((node-hierarchy/tree node-type-name1) node-properties/super-name)
-                        node-type-name2)))
+;; +---------------------------------------+
+;; |                                       |
+;; |   CHANNEL TYPE LIST RELATED METHODS   |
+;; |                                       |
+;; +---------------------------------------+
+
+(defn clear-type-list
+  []
+  (alter-var-root
+   types-list
+   (fn [_] [])))
+
+(defn clear-abstract-type-list
+  []
+  (alter-var-root
+   abstract-types-list
+   (fn [_] [])))
+
+(defn add-type-list
+  [type-keyword]
+  (alter-var-root
+   types-list
+   (fn [_]
+     (if (utils/in-list? types-list type-keyword)
+       types-list
+       (into types-list [type-keyword])))))
+
+(defn add-abstract-type-list
+  [type-keyword]
+  (alter-var-root
+   abstract-types-list
+   (fn [_]
+     (if (utils/in-list? abstract-types-list type-keyword)
+       abstract-types-list
+       (into abstract-types-list [type-keyword])))))

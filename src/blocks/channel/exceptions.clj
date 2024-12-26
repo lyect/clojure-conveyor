@@ -8,8 +8,8 @@
 ;; |                             |
 ;; +-----------------------------+
 
-(def type-keyword  ::channelexceptionkeyword-type-keyword)
-(def cause-keyword ::channelexceptionkeyword-cause-keyword)
+(def type-keyword  ::keyword-type-keyword)
+(def cause-keyword ::keyword-cause-keyword)
 
 ;; +---------------------+
 ;; |                     |
@@ -17,15 +17,18 @@
 ;; |                     |
 ;; +---------------------+
 
-(def define-channel-type  ::channelexceptiontype-define-channel-type)
-(def create               ::channelexceptiontype-create)
-(def get-channel-property ::channelexceptiontype-get-channel-property)
-(def get-channel-field    ::channelexceptiontype-get-channel-field)
+(def define-channel-type  ::type-define-channel-type)
+(def create               ::type-create)
+(def get-channel-property ::type-get-channel-property)
+(def get-channel-field    ::type-get-channel-field)
+(def abstract             ::type-abstract)
+
 
 (def ^:private type-list [define-channel-type
                           create
                           get-channel-property
-                          get-channel-field])
+                          get-channel-field
+                          abstract])
 
 ;; +----------------------+
 ;; |                      |
@@ -33,19 +36,19 @@
 ;; |                      |
 ;; +----------------------+
 
-(def duplicating-fields         ::channelexceptioncause-duplicating-fields)
-(def super-fields-intersection  ::channelexceptioncause-super-fields-intersection)
-(def channel-properties-missing ::channelexceptioncause-channel-properties-missing)
-(def missing-fields             ::channelexceptioncause-missing-fields)
-(def excess-fields              ::channelexceptioncause-excess-fields)
-(def type-undeclared            ::channelexceptioncause-type-undeclared)
-(def type-defined               ::channelexceptioncause-type-defined)
-(def super-undeclared           ::channelexceptioncause-super-undeclared)
-(def super-undefined            ::channelexceptioncause-super-undefined)
-(def not-channel                ::channelexceptioncause-not-channel)
-(def type-undefined             ::channelexceptioncause-type-undefined)
-(def unknown-field              ::channelexceptioncause-unknown-field)
-(def abstract-creation          ::channelexceptioncause-abstract-creation)
+(def duplicating-fields         ::cause-duplicating-fields)
+(def super-fields-intersection  ::cause-super-fields-intersection)
+(def channel-properties-missing ::cause-channel-properties-missing)
+(def missing-fields             ::cause-missing-fields)
+(def excess-fields              ::cause-excess-fields)
+(def type-undeclared            ::cause-type-undeclared)
+(def type-defined               ::cause-type-defined)
+(def super-undeclared           ::cause-super-undeclared)
+(def super-undefined            ::cause-super-undefined)
+(def not-channel                ::cause-not-channel)
+(def type-undefined             ::cause-type-undefined)
+(def unknown-field              ::cause-unknown-field)
+(def abstract-creation          ::cause-abstract-creation)
 
 (def ^:private cause-list [duplicating-fields
                            super-fields-intersection
@@ -82,7 +85,8 @@
                                                                  abstract-creation]
                                             get-channel-property [not-channel]
                                             get-channel-field    [not-channel
-                                                                  unknown-field]})
+                                                                  unknown-field]
+                                            abstract             [type-undeclared]})
 
 ;; +---------------------------+
 ;; |                           |
@@ -91,7 +95,6 @@
 ;; +---------------------------+
 
 (defn construct
-  "Construct exception with _type_, _cause_ and _message_"
   [type cause message]
   {:pre [(utils/in-list? type-list                          type)
          (utils/in-list? cause-list                         cause)

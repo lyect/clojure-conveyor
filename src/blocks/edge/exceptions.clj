@@ -8,8 +8,8 @@
 ;; |                             |
 ;; +-----------------------------+
 
-(def type-keyword  ::edgeexceptionkeyword-type-keyword)
-(def cause-keyword ::edgeexceptionkeyword-cause-keyword)
+(def type-keyword  ::keyword-type-keyword)
+(def cause-keyword ::keyword-cause-keyword)
 
 ;; +---------------------+
 ;; |                     |
@@ -17,8 +17,8 @@
 ;; |                     |
 ;; +---------------------+
 
-(def create            ::edgeexceptiontype-create)
-(def get-edge-property ::edgeexceptiontype-get-edge-property)
+(def create            ::type-create)
+(def get-edge-property ::type-get-edge-property)
 
 (def ^:private type-list [create
                           get-edge-property])
@@ -29,16 +29,16 @@
 ;; |                      |
 ;; +----------------------+
 
-(def begin-vertex-index-not-integer        ::edgeexceptioncause-begin-vertex-index-not-integer)
-(def begin-vertex-output-index-not-integer ::edgeexceptioncause-begin-vertex-output-index-not-integer)
-(def end-vertex-index-not-integer          ::edgeexceptioncause-end-vertex-index-not-integer)
-(def end-vertex-input-index-not-integer    ::edgeexceptioncause-end-vertex-input-index-not-integer)
-(def begin-vertex-index-negative           ::edgeexceptioncause-begin-vertex-index-negative)
-(def begin-vertex-output-index-negative    ::edgeexceptioncause-begin-vertex-output-index-negative)
-(def end-vertex-index-negative             ::edgeexceptioncause-end-vertex-index-negative)
-(def end-vertex-input-index-negative       ::edgeexceptioncause-end-vertex-input-index-negative)
-(def not-edge                              ::edgeexceptioncause-not-edge)
-(def edge-properties-missing               ::edgeexceptioncause-edge-properties-missing)
+(def begin-vertex-index-not-integer        ::cause-begin-vertex-index-not-integer)
+(def begin-vertex-output-index-not-integer ::cause-begin-vertex-output-index-not-integer)
+(def end-vertex-index-not-integer          ::cause-end-vertex-index-not-integer)
+(def end-vertex-input-index-not-integer    ::cause-end-vertex-input-index-not-integer)
+(def begin-vertex-index-negative           ::cause-begin-vertex-index-negative)
+(def begin-vertex-output-index-negative    ::cause-begin-vertex-output-index-negative)
+(def end-vertex-index-negative             ::cause-end-vertex-index-negative)
+(def end-vertex-input-index-negative       ::cause-end-vertex-input-index-negative)
+(def not-edge                              ::cause-not-edge)
+(def edge-properties-missing               ::cause-edge-properties-missing)
 
 (def ^:private cause-list [begin-vertex-index-not-integer
                            begin-vertex-output-index-not-integer

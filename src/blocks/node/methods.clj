@@ -15,7 +15,6 @@
 ;; +-----------------------------+
 
 (def node?
-  "Predicate to check whether _obj_ is node or not"
   (memoize
    (fn [obj-ref]
      (and (some? @obj-ref)
@@ -32,7 +31,6 @@
 ;; No need to check whether node has the property or not. get-node-property is a private function,
 ;; hence it is used only for specific properties
 (defn- get-node-property
-  "Get _property_ of _node_"
   [node-ref property]
   (when-not (node? node-ref)
     (throw (node-exceptions/construct node-exceptions/get-node-property node-exceptions/not-node
@@ -47,8 +45,7 @@
 (def get-node-outputs         (memoize (fn [node-ref] (get-node-property node-ref node-properties/outputs))))
 (def get-node-ready-validator (memoize (fn [node-ref] (get-node-property node-ref node-properties/ready-validator))))
 (def get-node-function        (memoize (fn [node-ref] (get-node-property node-ref node-properties/function))))
-(def get-node-fields          (memoize (fn [node-ref] (remove (set base-node-fields/fields-list)
-                                                              (get-node-property node-ref node-properties/fields)))))
+(def get-node-fields          (memoize (fn [node-ref] (remove (set base-node-fields/fields-list) (get-node-property node-ref node-properties/fields)))))
 
 ;; +---------------------------------+
 ;; |                                 |
@@ -57,7 +54,6 @@
 ;; +---------------------------------+
 
 (def get-node-name
-  "Get name of _node_"
   (memoize
    (fn [node-ref]
      (when-not (node? node-ref)
@@ -66,7 +62,6 @@
      (node-ref base-node-fields/node-name))))
 
 (defn get-node-field
-  "Get field's value of _node_ by _field-name_"
   [node-ref field-name]
   (when-not (node? node-ref)
     (throw (node-exceptions/construct node-exceptions/get-node-field node-exceptions/not-node
@@ -85,18 +80,16 @@
 ;; +----------------------+
 
 (defn create
-  "Create node typed as _node-type-name_ with name _node-name_, fills fields with _fields_.
-   _fields_ must be a collection consisting of pairs such as (f1 v1 f2 v2 ... fn vn)"
   [node-type-name node-name & fields]
-  (when-not (utils/in-list? node-types/types-list node-type-name)
+  (when-not (node-types/declared? node-type-name)
     (throw (node-exceptions/construct node-exceptions/create node-exceptions/type-undeclared
                                          (str "Type named \"" node-type-name "\" is undeclared"))))
+  (when (node-types/abstract? node-type-name)
+    (throw (node-exceptions/construct node-exceptions/create node-exceptions/abstract-creation
+                                      (str "Unable to instantiate node with abstract type " node-type-name))))
   (when-not (node-types/defined? node-type-name)
     (throw (node-exceptions/construct node-exceptions/create node-exceptions/type-undefined
                                          (str "Type named \"" node-type-name "\" is undefined"))))
-  (when (node-types/abstract? node-type-name)
-    (throw (node-exceptions/construct node-exceptions/create node-exceptions/abstract-creation
-                                         (str "Unable to instantiate abstract node"))))
   (let [fields-map           (apply hash-map fields)
         node-fields          (keys fields-map)
         node-fields-set      (set node-fields)
