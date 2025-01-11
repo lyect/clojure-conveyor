@@ -4,9 +4,10 @@
             [blocks.channel.properties                 :as channel-properties]
             [blocks.channel.types                      :as channel-types]))
 
-(defn define-base-channel []
+
+(defn define []
   (when-not (channel-types/defined? channel-types/ChannelT)
     (dosync
-      (alter channel-hierarchy/tree #(assoc % channel-types/ChannelT {channel-properties/type-name  channel-types/ChannelT
-                                                                      channel-properties/super-name nil
-                                                                      channel-properties/fields     base-channel-fields/fields-list})))))
+      (alter channel-hierarchy/tree #(assoc % channel-types/ChannelT {channel-properties/super-type-tag nil
+                                                                      channel-properties/label          "Channel"
+                                                                      channel-properties/fields-tags    base-channel-fields/tags-list})))))

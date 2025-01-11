@@ -17,15 +17,17 @@
 ;; |                     |
 ;; +---------------------+
 
-(def create                ::type-create)
-(def get-conveyor-property ::type-get-conveyor-property)
-(def start                 ::type-start)
-(def store                 ::type-store)
+(def create       ::type-create)
+(def get-outputs  ::type-get-outputs)
+(def start        ::type-start)
+(def store        ::type-store)
+(def flush-output ::type-flush-output)
 
 (def ^:private type-list [create
-                          get-conveyor-property
+                          get-outputs
                           start
-                          store])
+                          store
+                          flush-output])
 
 ;; +----------------------+
 ;; |                      |
@@ -36,6 +38,8 @@
 (def different-input-output      ::cause-different-input-output)
 (def conveyor-properties-missing ::cause-conveyor-properties-missing)
 (def not-conveyor                ::cause-not-conveyor)
+(def not-conveyor-input          ::cause-not-conveyor-input)
+(def not-conveyor-output         ::cause-not-conveyor-output)
 
 (def ^:private cause-list [different-input-output
                            conveyor-properties-missing
@@ -47,11 +51,14 @@
 ;; |                                                   |
 ;; +---------------------------------------------------+
 
-(def ^:private types-causes-correspondence {create                [different-input-output
-                                                                   conveyor-properties-missing]
-                                            get-conveyor-property [not-conveyor]
-                                            start                 [not-conveyor]
-                                            store                 [not-conveyor]})
+(def ^:private types-causes-correspondence {create       [different-input-output
+                                                          conveyor-properties-missing]
+                                            get-outputs  [not-conveyor]
+                                            start        [not-conveyor]
+                                            store        [not-conveyor
+                                                          not-conveyor-input]
+                                            flush-output [not-conveyor
+                                                          not-conveyor-output]})
 
 ;; +---------------------------+
 ;; |                           |

@@ -17,23 +17,33 @@
 ;; |                     |
 ;; +---------------------+
 
-(def define-node-type  ::type-define-node-type)
-(def create            ::type-create)
-(def get-node-property ::type-get-node-property)
-(def get-node-field    ::type-get-node-field)
-(def get-node-name     ::type-get-node-name)
-(def store             ::type-store)
-(def flush-output      ::type-flush-output)
-(def execute           ::type-execute)
+(def define                  ::type-define)
+(def get-property            ::type-get-property)
+(def abstract                ::type-abstract)
+(def get-field-value         ::type-get-field-value)
+(def create                  ::type-create)
+(def set-required-input-load ::type-set-required-input-load)
+(def store                   ::type-store)
+(def get-type-tag            ::type-get-type-tag)
+(def get-label               ::type-get-label)
+(def flush-output            ::type-flush-output)
+(def execute                 ::type-execute)
+(def reserve-label           ::type-reserve-label)
+(def get-fields              ::type-get-fields)
 
-(def ^:private type-list [define-node-type
+(def ^:private type-list [define
+                          get-property
+                          abstract
+                          get-field-value
                           create
-                          get-node-property
-                          get-node-field
-                          get-node-name
+                          set-required-input-load
                           store
+                          get-type-tag
+                          get-label
                           flush-output
-                          execute])
+                          execute
+                          reserve-label
+                          get-fields])
 
 ;; +----------------------+
 ;; |                      |
@@ -41,49 +51,57 @@
 ;; |                      |
 ;; +----------------------+
 
-(def duplicating-fields          ::cause-duplicating-fields)
-(def super-fields-intersection   ::cause-super-fields-intersection)
-(def node-properties-missing     ::cause-node-properties-missing)
-(def missing-fields              ::cause-missing-fields)
-(def excess-fields               ::cause-excess-fields)
-(def type-undeclared             ::cause-type-undeclared)
-(def type-defined                ::cause-type-defined)
-(def super-undeclared            ::cause-super-undeclared)
-(def super-undefined             ::cause-super-undefined)
-(def inputs-unvalidated          ::cause-inputs-unvalidated)
-(def outputs-unvalidated         ::cause-outputs-unvalidated)
-(def function-unvalidated        ::cause-function-unvalidated)
-(def not-node                    ::cause-not-node)
-(def type-undefined              ::cause-type-undefined)
-(def unknown-field               ::cause-unknown-field)
-(def abstract-creation           ::cause-abstract-creation)
-(def function-undefined          ::cause-function-undefined)
-(def ready-validator-undefined   ::cause-ready-validator-undefined)
-(def inputs-undefined            ::cause-inputs-undefined)
-(def outputs-undefined           ::cause-outputs-undefined)
-(def ready-validator-unvalidated ::cause-ready-validator-unvalidated)
+(def type-undeclared                           ::cause-type-undeclared)
+(def type-defined                              ::cause-type-defined)
+(def super-type-undeclared                     ::cause-super-type-undeclared)
+(def super-type-undefined                      ::cause-super-type-undefined)
+(def inputs-not-vector                         ::cause-inputs-not-vector)
+(def duplicated-inputs-tags                    ::cause-duplicated-inputs-tags)
+(def outputs-not-vector                        ::cause-outputs-not-vector)
+(def duplicated-outputs-tags                   ::cause-duplicated-outputs-tags)
+(def links-not-vector                          ::cause-links-not-vector)
+(def duplicated-links-inputs-tags              ::cause-duplicated-links-inputs-tags)
+(def fields-tags-not-vector                    ::cause-fields-tags-not-vector)
+(def duplicated-fields-tags                    ::cause-duplicated-fields-tags)
+(def super-type-inputs-tags-intersection       ::cause-super-type-inputs-tags-intersection)
+(def super-type-outputs-tags-intersection      ::cause-super-type-outputs-tags-intersection)
+(def super-type-links-inputs-tags-intersection ::cause-super-type-links-inputs-tags-intersection)
+(def super-type-fields-tags-intersection       ::cause-super-type-fields-tags-intersection)
+(def type-undefined                            ::cause-type-undefined)
+(def not-node                                  ::cause-not-node)
+(def unknown-field-tag                         ::cause-unknown-field-tag)
+(def type-abstract                             ::cause-type-abstract)
+(def missed-fields-tags                        ::cause-missed-fields-tags)
+(def excess-fields-tags                        ::cause-excess-fields-tags)
+(def unknown-input-tag                         ::cause-unknown-input-tag)
+(def small-min-load                            ::cause-small-min-load)
+(def label-reserved                            ::cause-label-reserved)
 
-(def ^:private cause-list [duplicating-fields
-                           super-fields-intersection
-                           node-properties-missing
-                           missing-fields
-                           excess-fields
-                           type-undeclared
+(def ^:private cause-list [type-undeclared
                            type-defined
-                           super-undeclared
-                           super-undefined
-                           inputs-unvalidated
-                           outputs-unvalidated
-                           function-unvalidated
-                           not-node
+                           super-type-undeclared
+                           super-type-undefined
+                           inputs-not-vector
+                           duplicated-inputs-tags
+                           outputs-not-vector
+                           duplicated-outputs-tags
+                           links-not-vector
+                           duplicated-links-inputs-tags
+                           fields-tags-not-vector
+                           duplicated-fields-tags
+                           super-type-inputs-tags-intersection
+                           super-type-outputs-tags-intersection
+                           super-type-links-inputs-tags-intersection
+                           super-type-fields-tags-intersection
                            type-undefined
-                           unknown-field
-                           abstract-creation
-                           function-undefined
-                           ready-validator-undefined
-                           inputs-undefined
-                           outputs-undefined
-                           ready-validator-unvalidated])
+                           not-node
+                           unknown-field-tag
+                           type-abstract
+                           missed-fields-tags
+                           excess-fields-tags
+                           unknown-input-tag
+                           small-min-load
+                           label-reserved])
 
 ;; +---------------------------------------------------+
 ;; |                                                   |
@@ -91,33 +109,44 @@
 ;; |                                                   |
 ;; +---------------------------------------------------+
 
-(def ^:private types-causes-correspondence {define-node-type  [duplicating-fields
-                                                               super-fields-intersection
-                                                               node-properties-missing
-                                                               type-undeclared
-                                                               type-defined
-                                                               super-undeclared
-                                                               super-undefined
-                                                               inputs-unvalidated
-                                                               outputs-unvalidated
-                                                               function-unvalidated
-                                                               function-undefined
-                                                               ready-validator-undefined
-                                                               inputs-undefined
-                                                               outputs-undefined
-                                                               ready-validator-unvalidated]
-                                            create            [duplicating-fields
-                                                               missing-fields
-                                                               excess-fields
-                                                               type-undeclared
-                                                               type-undefined
-                                                               abstract-creation]
-                                            get-node-property [not-node]
-                                            get-node-field    [not-node
-                                                               unknown-field]
-                                            get-node-name     [not-node]
-                                            store             [not-node]
-                                            flush-output      [not-node]})
+(def ^:private types-causes-correspondence {define                  [type-undeclared
+                                                                     type-defined
+                                                                     super-type-undeclared
+                                                                     super-type-undefined
+                                                                     inputs-not-vector
+                                                                     duplicated-inputs-tags
+                                                                     outputs-not-vector
+                                                                     duplicated-outputs-tags
+                                                                     links-not-vector
+                                                                     duplicated-links-inputs-tags
+                                                                     fields-tags-not-vector
+                                                                     duplicated-fields-tags
+                                                                     super-type-inputs-tags-intersection
+                                                                     super-type-outputs-tags-intersection
+                                                                     super-type-links-inputs-tags-intersection
+                                                                     super-type-fields-tags-intersection]
+                                            get-property            [type-undeclared
+                                                                     type-undefined]
+                                            abstract                [type-undeclared
+                                                                     type-undefined]
+                                            get-field-value         [not-node
+                                                                     unknown-field-tag]
+                                            create                  [type-undeclared
+                                                                     type-undefined
+                                                                     type-abstract
+                                                                     duplicated-fields-tags
+                                                                     missed-fields-tags
+                                                                     excess-fields-tags]
+                                            set-required-input-load [not-node
+                                                                     unknown-input-tag
+                                                                     small-min-load]
+                                            store                   [not-node]
+                                            get-type-tag            [not-node]
+                                            get-label               [not-node]
+                                            flush-output            [not-node]
+                                            execute                 [not-node]
+                                            get-fields              [not-node]
+                                            reserve-label           [label-reserved]})
 
 ;; +---------------------------+
 ;; |                           |

@@ -3,43 +3,59 @@
             [blocks.channel.definitions.image.fields :as image-channel-fields]
             [blocks.channel.methods                  :as channel-methods]
             [blocks.channel.types                    :as channel-types]
-            [blocks.node.base                        :as node-base]
-            [blocks.node.definitions.node.fields     :as base-node-fields]
             [blocks.node.definitions.rgbsplit.fields :as rgbsplit-node-fields]
             [blocks.node.definitions.node.def        :as base-node-def]
-            [blocks.node.methods                     :as node-methods]
+            [blocks.node.input.methods               :as node-input-methods]
+            [blocks.node.link.methods                :as node-link-methods]
+            [blocks.node.output.methods              :as node-output-methods]
             [blocks.node.properties                  :as node-properties]
             [blocks.node.types                       :as node-types]))
 
-(defn- rgbsplit-node-function
-  [node-ref]
-  (let [input-buffer-ref    (nth (node-ref base-node-fields/input-buffers)  0)
-        r-output-buffer-ref (nth (node-ref base-node-fields/output-buffers) 0)
-        g-output-buffer-ref (nth (node-ref base-node-fields/output-buffers) 1)
-        b-output-buffer-ref (nth (node-ref base-node-fields/output-buffers) 2)
-        image               (first @input-buffer-ref)
-        width               (channel-methods/get-channel-field image image-channel-fields/width)
-        height              (channel-methods/get-channel-field image image-channel-fields/height)]
-    (alter input-buffer-ref #(rest %))
-    (println (str "[" (node-methods/get-node-name node-ref) "]: RGBSplit done for Image: " @image))
-    (alter r-output-buffer-ref #(conj % (channel-methods/create channel-types/BitmapT
-                                                                image-channel-fields/width  width
-                                                                image-channel-fields/height height)))
-    (alter g-output-buffer-ref #(conj % (channel-methods/create channel-types/BitmapT
-                                                                image-channel-fields/width  width
-                                                                image-channel-fields/height height)))
-    (alter b-output-buffer-ref #(conj % (channel-methods/create channel-types/BitmapT
-                                                                image-channel-fields/width  width
-                                                                image-channel-fields/height height)))))
 
-(defn define-rgbsplit-node []
+(def image-input  ::image-input)
+(def red-output   ::red-output)
+(def green-output ::green-output)
+(def blue-output  ::blue-output)
+
+(defn- handler
+  [_ [image]]
+  (let [rw (channel-methods/get-field-value image image-channel-fields/width)
+        rh (channel-methods/get-field-value image image-channel-fields/height)
+        gw (channel-methods/get-field-value image image-channel-fields/width)
+        gh (channel-methods/get-field-value image image-channel-fields/height)
+        bw (channel-methods/get-field-value image image-channel-fields/width)
+        bh (channel-methods/get-field-value image image-channel-fields/height)
+        rr (channel-methods/create channel-types/BitmapT
+                                   image-channel-fields/width  rw
+                                   image-channel-fields/height rh)
+        gr (channel-methods/create channel-types/BitmapT
+                                   image-channel-fields/width  gw
+                                   image-channel-fields/height gh)
+        br (channel-methods/create channel-types/BitmapT
+                                   image-channel-fields/width  bw
+                                   image-channel-fields/height bh)]
+    (println (str "RGBSplit " image))
+    (println (str "RGBSplit result: " rr "(W=" rw ", H=" rh ") " gr "(W=" gw ", H=" gh ") " br "(W=" bw ", H=" bh ")"))
+    {red-output   [rr]
+     green-output [gr]
+     blue-output  [br]}))
+
+(defn define []
   (when-not (node-types/defined? node-types/RGBSplitT)
-    (base-node-def/define-base-node)
-    (bitmap-channel-def/define-bitmap-channel)
-    (node-base/define-node-type node-types/RGBSplitT
-      node-properties/inputs   [channel-types/ImageT]
-      node-properties/outputs  [channel-types/ImageT
-                                channel-types/ImageT
-                                channel-types/ImageT]
-      node-properties/function rgbsplit-node-function
-      node-properties/fields   rgbsplit-node-fields/fields-list)))
+    (base-node-def/define)
+    (bitmap-channel-def/define)
+    (node-types/define "RGBSplit" node-types/RGBSplitT
+                       node-properties/inputs      [(node-input-methods/create image-input
+                                                                               channel-types/ImageT)]
+                       node-properties/outputs     [(node-output-methods/create red-output
+                                                                                channel-types/ImageT)
+                                                    (node-output-methods/create green-output
+                                                                                channel-types/ImageT)
+                                                    (node-output-methods/create blue-output
+                                                                                channel-types/ImageT)]
+                       node-properties/links       [(node-link-methods/create [image-input]
+                                                                              [red-output
+                                                                               green-output
+                                                                               blue-output]
+                                                                              handler)]
+                       node-properties/fields-tags rgbsplit-node-fields/tags-list)))

@@ -1,4 +1,4 @@
 (ns blocks.node.definitions.rgbsplit.fields)
 
 
-(def fields-list [])
+(def tags-list [])

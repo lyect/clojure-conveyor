@@ -1,4 +1,4 @@
 (ns blocks.node.definitions.denoise.fields)
 
 
-(def fields-list [])
+(def tags-list [])

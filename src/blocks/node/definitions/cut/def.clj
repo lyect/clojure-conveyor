@@ -3,36 +3,40 @@
             [blocks.channel.definitions.image.fields :as image-channel-fields]
             [blocks.channel.methods                  :as channel-methods]
             [blocks.channel.types                    :as channel-types]
-            [blocks.node.base                        :as node-base]
-            [blocks.node.definitions.node.fields     :as base-node-fields]
             [blocks.node.definitions.cut.fields      :as cut-node-fields]
             [blocks.node.definitions.node.def        :as base-node-def]
-            [blocks.node.methods                     :as node-methods]
+            [blocks.node.input.methods               :as node-input-methods]
+            [blocks.node.link.methods                :as node-link-methods]
+            [blocks.node.output.methods              :as node-output-methods]
             [blocks.node.properties                  :as node-properties]
             [blocks.node.types                       :as node-types]))
 
-(defn- cut-node-function
-  [node-ref]
-  (let [node-fields       (node-ref node-properties/fields)
-        input-buffer-ref  (nth (node-ref base-node-fields/input-buffers)  0)
-        output-buffer-ref (nth (node-ref base-node-fields/output-buffers) 0)
-        image             (first @input-buffer-ref)
-        new-width         (quot (channel-methods/get-channel-field @image image-channel-fields/width) (node-fields cut-node-fields/n))
-        new-height        (channel-methods/get-channel-field @image image-channel-fields/height)]
-    (alter input-buffer-ref #(rest %))
-    (println (str "[" (node-methods/get-node-name node-ref) "]: Cut result: N Bitmaps such as (width: " new-width ", height: " new-height ")"))
-    (alter output-buffer-ref #(into % (repeat
-                                       (node-fields cut-node-fields/n)
-                                       (channel-methods/create channel-types/BitmapT
-                                                               image-channel-fields/width  new-width
-                                                               image-channel-fields/height new-height))))))
 
-(defn define-cut-node []
+(def image-input    ::image-input)
+(def results-output ::results-output)
+
+(defn- handler
+  [node-fields [image]]
+  (let [new-width  (quot (channel-methods/get-field-value image image-channel-fields/width) (node-fields cut-node-fields/n))
+        new-height (channel-methods/get-field-value image image-channel-fields/height)
+        results (into [] (repeatedly (node-fields cut-node-fields/n)
+                                     (fn [] (channel-methods/create channel-types/BitmapT
+                                                                    image-channel-fields/width  new-width
+                                                                    image-channel-fields/height new-height))))]
+    (println (str "Cut " image))
+    (println (str "Cut result: " (reduce #(str %1 %2 "(W=" new-width ", H=" new-height ") ") "" results)))
+    {results-output results}))
+
+(defn define []
   (when-not (node-types/defined? node-types/CutT)
-    (base-node-def/define-base-node)
-    (bitmap-channel-def/define-bitmap-channel)
-    (node-base/define-node-type node-types/CutT
-                                node-properties/inputs   [channel-types/ImageT]
-                                node-properties/outputs  [channel-types/ImageT]
-                                node-properties/function cut-node-function
-                                node-properties/fields   cut-node-fields/fields-list)))
+    (base-node-def/define)
+    (bitmap-channel-def/define)
+    (node-types/define "Cut" node-types/CutT
+                       node-properties/inputs      [(node-input-methods/create image-input
+                                                                               channel-types/ImageT)]
+                       node-properties/outputs     [(node-output-methods/create results-output
+                                                                                channel-types/ImageT)]
+                       node-properties/links       [(node-link-methods/create [image-input]
+                                                                              [results-output]
+                                                                              handler)]
+                       node-properties/fields-tags cut-node-fields/tags-list)))

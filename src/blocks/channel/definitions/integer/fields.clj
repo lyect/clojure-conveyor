@@ -1,4 +1,4 @@
 (ns blocks.channel.definitions.integer.fields)
 
 
-(def fields-list [])
+(def tags-list [])

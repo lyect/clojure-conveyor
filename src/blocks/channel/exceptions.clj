@@ -17,18 +17,19 @@
 ;; |                     |
 ;; +---------------------+
 
-(def define-channel-type  ::type-define-channel-type)
-(def create               ::type-create)
-(def get-channel-property ::type-get-channel-property)
-(def get-channel-field    ::type-get-channel-field)
-(def abstract             ::type-abstract)
+(def abstract        ::type-abstract)
+(def get-property    ::type-get-property)
+(def define          ::type-define)
+(def get-field-value ::type-get-field-value)
+(def get-type-tag    ::type-get-type-tag)
+(def create          ::type-create)
 
-
-(def ^:private type-list [define-channel-type
-                          create
-                          get-channel-property
-                          get-channel-field
-                          abstract])
+(def ^:private type-list [abstract
+                          get-property
+                          define
+                          get-field-value
+                          get-type-tag
+                          create])
 
 ;; +----------------------+
 ;; |                      |
@@ -36,33 +37,33 @@
 ;; |                      |
 ;; +----------------------+
 
-(def duplicating-fields         ::cause-duplicating-fields)
-(def super-fields-intersection  ::cause-super-fields-intersection)
-(def channel-properties-missing ::cause-channel-properties-missing)
-(def missing-fields             ::cause-missing-fields)
-(def excess-fields              ::cause-excess-fields)
-(def type-undeclared            ::cause-type-undeclared)
-(def type-defined               ::cause-type-defined)
-(def super-undeclared           ::cause-super-undeclared)
-(def super-undefined            ::cause-super-undefined)
-(def not-channel                ::cause-not-channel)
-(def type-undefined             ::cause-type-undefined)
-(def unknown-field              ::cause-unknown-field)
-(def abstract-creation          ::cause-abstract-creation)
+(def type-undeclared                     ::cause-type-undeclared)
+(def type-undefined                      ::cause-type-undefined)
+(def type-defined                        ::cause-type-defined)
+(def super-type-undeclared               ::cause-super-type-undeclared)
+(def super-type-undefined                ::cause-super-type-undefined)
+(def fields-tags-not-vector              ::cause-fields-tags-not-vector)
+(def duplicated-fields-tags              ::cause-duplicated-fields-tags)
+(def super-type-fields-tags-intersection ::cause-super-type-fields-tags-intersection)
+(def not-channel                         ::cause-not-channel)
+(def unknown-field-tag                   ::cause-unknown-field-tag)
+(def type-abstract                       ::cause-type-abstract)
+(def missed-fields-tags                  ::cause-missed-fields-tags)
+(def excess-fields-tags                  ::cause-excess-fields-tags)
 
-(def ^:private cause-list [duplicating-fields
-                           super-fields-intersection
-                           channel-properties-missing
-                           missing-fields
-                           excess-fields
-                           type-undeclared
-                           type-defined
-                           super-undeclared
-                           super-undefined
-                           not-channel
+(def ^:private cause-list [type-undeclared
                            type-undefined
-                           unknown-field
-                           abstract-creation])
+                           type-defined
+                           super-type-undeclared
+                           super-type-undefined
+                           fields-tags-not-vector
+                           duplicated-fields-tags
+                           super-type-fields-tags-intersection
+                           not-channel
+                           unknown-field-tag
+                           type-abstract
+                           missed-fields-tags
+                           excess-fields-tags])
 
 ;; +---------------------------------------------------+
 ;; |                                                   |
@@ -70,23 +71,26 @@
 ;; |                                                   |
 ;; +---------------------------------------------------+
 
-(def ^:private types-causes-correspondence {define-channel-type [duplicating-fields
-                                                                 super-fields-intersection
-                                                                 channel-properties-missing
-                                                                 type-undeclared
-                                                                 type-defined
-                                                                 super-undeclared
-                                                                 super-undefined]
-                                            create              [duplicating-fields
-                                                                 missing-fields
-                                                                 excess-fields
-                                                                 type-undeclared
-                                                                 type-undefined
-                                                                 abstract-creation]
-                                            get-channel-property [not-channel]
-                                            get-channel-field    [not-channel
-                                                                  unknown-field]
-                                            abstract             [type-undeclared]})
+(def ^:private types-causes-correspondence {abstract        [type-undeclared
+                                                             type-undefined]
+                                            get-property    [type-undeclared
+                                                             type-undefined]
+                                            define          [type-undeclared
+                                                             type-defined
+                                                             super-type-undeclared
+                                                             super-type-undefined
+                                                             fields-tags-not-vector
+                                                             duplicated-fields-tags
+                                                             super-type-fields-tags-intersection]
+                                            get-field-value [not-channel
+                                                             unknown-field-tag]
+                                            get-type-tag    [not-channel]
+                                            create          [type-undeclared
+                                                             type-undefined
+                                                             type-abstract
+                                                             duplicated-fields-tags
+                                                             missed-fields-tags
+                                                             excess-fields-tags]})
 
 ;; +---------------------------+
 ;; |                           |

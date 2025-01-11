@@ -17,32 +17,32 @@
 ;; |                     |
 ;; +---------------------+
 
-(def get-vertex-property    ::type-get-vertex-property)
-(def create                 ::type-create)
-(def get-node-input         ::type-get-node-input)
-(def get-node-output        ::type-get-node-output)
-(def get-node-inputs-count  ::type-get-node-inputs-count)
-(def get-node-outputs-count ::type-get-node-outputs-count)
-(def set-input-connected    ::type-set-input-connected)
-(def input-connected        ::type-input-connected)
-(def all-inputs-connected   ::type-all-inputs-connected)
-(def set-output-connected   ::type-set-output-connected)
-(def output-connected       ::type-output-connected)
-(def all-outputs-connected  ::type-all-outputs-connected)
-(def start                  ::type-start)
+(def get-vertex-property          ::type-get-vertex-property)
+(def create                       ::type-create)
+(def get-node-input-channel-type  ::get-node-input-channel-type)
+(def get-node-output-channel-type ::type-get-node-output-channel-type)
+(def get-node-inputs-count        ::type-get-node-inputs-count)
+(def get-node-outputs-count       ::type-get-node-outputs-count)
+(def set-node-input-connected     ::type-set-node-input-connected)
+(def node-input-connected         ::type-node-input-connected)
+(def all-node-inputs-connected    ::type-all-node-inputs-connected)
+(def set-node-output-connected    ::type-set-node-output-connected)
+(def node-output-connected        ::type-node-output-connected)
+(def all-node-outputs-connected   ::type-all-node-outputs-connected)
+(def start                        ::type-start)
 
 (def ^:private type-list [get-vertex-property
                           create
-                          get-node-input
-                          get-node-output
+                          get-node-input-channel-type
+                          get-node-output-channel-type
                           get-node-inputs-count
                           get-node-outputs-count
-                          set-input-connected
-                          input-connected
-                          all-inputs-connected
-                          set-output-connected
-                          output-connected
-                          all-outputs-connected
+                          set-node-input-connected
+                          node-input-connected
+                          all-node-inputs-connected
+                          set-node-output-connected
+                          node-output-connected
+                          all-node-outputs-connected
                           start])
 
 ;; +----------------------+
@@ -65,20 +65,20 @@
 ;; |                                                   |
 ;; +---------------------------------------------------+
 
-(def ^:private types-causes-correspondence {get-vertex-property    [not-vertex]
-                                            create                 [not-node
-                                                                    vertex-properties-missing]
-                                            get-node-input         [not-vertex]
-                                            get-node-output        [not-vertex]
-                                            get-node-inputs-count  [not-vertex]
-                                            get-node-outputs-count [not-vertex]
-                                            set-input-connected    [not-vertex]
-                                            input-connected        [not-vertex]
-                                            all-inputs-connected   [not-vertex]
-                                            set-output-connected   [not-vertex]
-                                            output-connected       [not-vertex]
-                                            all-outputs-connected  [not-vertex]
-                                            start                  [not-vertex]})
+(def ^:private types-causes-correspondence {get-vertex-property          [not-vertex]
+                                            create                       [not-node
+                                                                          vertex-properties-missing]
+                                            get-node-input-channel-type  [not-vertex]
+                                            get-node-output-channel-type [not-vertex]
+                                            get-node-inputs-count        [not-vertex]
+                                            get-node-outputs-count       [not-vertex]
+                                            set-node-input-connected     [not-vertex]
+                                            node-input-connected         [not-vertex]
+                                            all-node-inputs-connected    [not-vertex]
+                                            set-node-output-connected    [not-vertex]
+                                            node-output-connected        [not-vertex]
+                                            all-node-outputs-connected   [not-vertex]
+                                            start                        [not-vertex]})
 
 ;; +---------------------------+
 ;; |                           |

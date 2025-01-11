@@ -1,12 +1,22 @@
 (ns blocks.node.methods
-  (:require [clojure.set                         :as cljset]
-            [blocks.node.definitions.node.fields :as base-node-fields]
-            [blocks.node.exceptions              :as node-exceptions]
-            [blocks.node.hierarchy               :as node-hierarchy]
-            [blocks.node.properties              :as node-properties]
-            [blocks.node.types                   :as node-types]
-            [utils]))
+  (:require
+   [blocks.node.definitions.node.fields :as base-node-fields]
+   [blocks.node.exceptions              :as node-exceptions]
+   [blocks.node.link.methods            :as node-link-methods]
+   [blocks.node.types                   :as node-types]
+   [clojure.set                         :as cljset]
+   [utils]
+   [blocks.node.methods :as node-methods]
+   [blocks.node.hierarchy :as node-hierarchy]))
 
+
+;; +---------------+
+;; |               |
+;; |   CONSTANTS   |
+;; |               |
+;; +---------------+
+
+(def ^:private min-input-load 1)
 
 ;; +-----------------------------+
 ;; |                             |
@@ -17,61 +27,53 @@
 (def node?
   (memoize
    (fn [obj-ref]
-     (and (some? @obj-ref)
+     (and (utils/ref? obj-ref)
+          @obj-ref
           (map? @obj-ref)
-          (obj-ref base-node-fields/type-name)
-          (node-types/defined? (obj-ref base-node-fields/type-name))))))
+          (reduce #(and %1 (some? (obj-ref %2))) true base-node-fields/tags-list)
+          (let [type-tag (obj-ref base-node-fields/type-tag)]
+            (and (node-types/defined? type-tag)
+                 (utils/lists-equal?  (remove (set base-node-fields/tags-list) (keys @obj-ref))
+                                      (node-types/get-fields-tags type-tag))))))))
 
-;; +----------------------------------------+
-;; |                                        |
-;; |   NODE TYPE RELATED PROPERTY GETTERS   |
-;; |                                        |
-;; +----------------------------------------+
+;; +-----------------------------------+
+;; |                                   |
+;; |   NODE INSTANCE RELATED GETTERS   |
+;; |                                   |
+;; +-----------------------------------+
 
-;; No need to check whether node has the property or not. get-node-property is a private function,
-;; hence it is used only for specific properties
-(defn- get-node-property
-  [node-ref property]
+(defn get-field-value
+  [node-ref field-tag]
   (when-not (node? node-ref)
-    (throw (node-exceptions/construct node-exceptions/get-node-property node-exceptions/not-node
-                                      (str "\"" node-ref "\" is not a node: " @node-ref))))
-  ((node-hierarchy/tree (node-ref base-node-fields/type-name)) property))
+    (throw (node-exceptions/construct node-exceptions/get-field-value node-exceptions/not-node
+                                      (str "\"" node-ref "\" is not a node"))))
+  (when-not ((apply dissoc @node-ref base-node-fields/tags-list) field-tag)
+    (throw (node-exceptions/construct node-exceptions/get-field-value node-exceptions/unknown-field-tag
+                                      (str "\"" node-ref "\" has no field tagged \"" field-tag "\""))))
+  (node-ref field-tag))
 
-;; No need to check whether "node" is a correct node or not
-;; It will be done inside "get-node-property"
-(def get-node-type-name       (memoize (fn [node-ref] (get-node-property node-ref node-properties/type-name))))
-(def get-node-super-name      (memoize (fn [node-ref] (get-node-property node-ref node-properties/super-name))))
-(def get-node-inputs          (memoize (fn [node-ref] (get-node-property node-ref node-properties/inputs))))
-(def get-node-outputs         (memoize (fn [node-ref] (get-node-property node-ref node-properties/outputs))))
-(def get-node-ready-validator (memoize (fn [node-ref] (get-node-property node-ref node-properties/ready-validator))))
-(def get-node-function        (memoize (fn [node-ref] (get-node-property node-ref node-properties/function))))
-(def get-node-fields          (memoize (fn [node-ref] (remove (set base-node-fields/fields-list) (get-node-property node-ref node-properties/fields)))))
-
-;; +---------------------------------+
-;; |                                 |
-;; |   NODE INSTANCE FIELDS GETTER   |
-;; |                                 |
-;; +---------------------------------+
-
-(def get-node-name
+(def get-type-tag
   (memoize
    (fn [node-ref]
      (when-not (node? node-ref)
-       (throw (node-exceptions/construct node-exceptions/get-node-name node-exceptions/not-node
+       (throw (node-exceptions/construct node-exceptions/get-type-tag node-exceptions/not-node
                                          (str "\"" node-ref "\" is not a node"))))
-     (node-ref base-node-fields/node-name))))
+     (node-ref base-node-fields/type-tag))))
 
-(defn get-node-field
-  [node-ref field-name]
+(def get-label
+  (memoize
+   (fn [node-ref]
+     (when-not (node? node-ref)
+       (throw (node-exceptions/construct node-exceptions/get-label node-exceptions/not-node
+                                         (str "\"" node-ref "\" is not a node"))))
+     (node-ref base-node-fields/label))))
+
+(defn get-fields
+  [node-ref]
   (when-not (node? node-ref)
-    (throw (node-exceptions/construct node-exceptions/get-node-field node-exceptions/not-node
+    (throw (node-exceptions/construct node-exceptions/get-fields node-exceptions/not-node
                                       (str "\"" node-ref "\" is not a node"))))
-  (let [protected-node (apply dissoc @node-ref base-node-fields/fields-list)]
-    (when-not (protected-node field-name)
-      (throw (node-exceptions/construct node-exceptions/get-node-field node-exceptions/unknown-field
-                                        (str "\"" node-ref "\" has no field named \"" field-name "\""))))
-       ; Base class fields protection
-    (protected-node field-name)))
+  (apply dissoc @node-ref base-node-fields/tags-list))
 
 ;; +----------------------+
 ;; |                      |
@@ -80,45 +82,39 @@
 ;; +----------------------+
 
 (defn create
-  [node-type-name node-name & fields]
-  (when-not (node-types/declared? node-type-name)
+  [label type-tag & fields]
+  (when-not (node-types/declared? type-tag)
     (throw (node-exceptions/construct node-exceptions/create node-exceptions/type-undeclared
-                                         (str "Type named \"" node-type-name "\" is undeclared"))))
-  (when (node-types/abstract? node-type-name)
-    (throw (node-exceptions/construct node-exceptions/create node-exceptions/abstract-creation
-                                      (str "Unable to instantiate node with abstract type " node-type-name))))
-  (when-not (node-types/defined? node-type-name)
+                                      (str "Type tagged \"" type-tag "\" is undeclared"))))
+  (when-not (node-types/defined? type-tag)
     (throw (node-exceptions/construct node-exceptions/create node-exceptions/type-undefined
-                                         (str "Type named \"" node-type-name "\" is undefined"))))
+                                      (str "Type tagged \"" type-tag "\" is undefined"))))
+  (when (node-types/abstract? type-tag)
+    (throw (node-exceptions/construct node-exceptions/create node-exceptions/type-abstract
+                                      (str "Type tagged \"" type-tag "\" is abstract"))))
   (let [fields-map           (apply hash-map fields)
-        node-fields          (keys fields-map)
-        node-fields-set      (set node-fields)
-        node-type-fields     (remove (set base-node-fields/fields-list) ((node-hierarchy/tree node-type-name) node-properties/fields))
-        node-type-fields-set (set node-type-fields)
+        fields-tags          (keys fields-map)
+        fields-tags-set      (set fields-tags)
+        type-fields-tags     (node-types/get-fields-tags type-tag)
+        type-fields-tags-set (set type-fields-tags)
         node-ref             (ref {})]
-    (when (> (count (take-nth 2 fields)) (count node-fields-set))
-      (throw (node-exceptions/construct node-exceptions/create node-exceptions/duplicating-fields
-                                        (str "Tried to create " node-type-name " with duplicated fields"))))
-    (when-not (empty? (cljset/difference node-type-fields-set node-fields-set))
-      (throw (node-exceptions/construct node-exceptions/create node-exceptions/missing-fields
-                                        (str "Tried to create " node-type-name " with missing fields"))))
-    (when-not (empty? (cljset/difference node-fields-set node-type-fields-set))
-      (throw (node-exceptions/construct node-exceptions/create node-exceptions/excess-fields
-                                        (str "Tried to create " node-type-name " with excess fields"))))
+    (when (> (count fields-tags) (count fields-tags-set))
+      (throw (node-exceptions/construct node-exceptions/create node-exceptions/duplicated-fields-tags
+                                        (str "Tried to create node of type tagged \"" type-tag "\" with duplicated fields tags"))))
+    (when-not (empty? (cljset/difference type-fields-tags-set fields-tags-set))
+      (throw (node-exceptions/construct node-exceptions/create node-exceptions/missed-fields-tags
+                                        (str "Tried to create node of type tagged \"" type-tag "\" with missing fields tags"))))
+    (when-not (empty? (cljset/difference fields-tags-set type-fields-tags-set))
+      (throw (node-exceptions/construct node-exceptions/create node-exceptions/excess-fields-tags
+                                        (str "Tried to create node of type tagged \"" type-tag "\" with excess fields tags"))))
     (doseq [fields-map-entry fields-map]
       (alter node-ref #(assoc % (first fields-map-entry) (second fields-map-entry))))
-    (alter node-ref #(assoc % base-node-fields/node-name             node-name))
-    (alter node-ref #(assoc % base-node-fields/type-name             node-type-name))
-    (alter node-ref #(assoc % base-node-fields/input-buffers         (repeatedly (count (get-node-inputs  node-ref)) (fn [] (ref [])))))
-    (alter node-ref #(assoc % base-node-fields/input-buffers-amounts (repeat     (count (get-node-inputs node-ref)) 1)))
-    (alter node-ref #(assoc % base-node-fields/output-buffers        (repeatedly (count (get-node-outputs node-ref)) (fn [] (ref [])))))
-    
-    (when (fields-map base-node-fields/input-buffers-amounts)
-      (alter node-ref #(assoc % base-node-fields/input-buffers-amounts (reduce
-                                                                        (fn [input-buffers-amounts [input-index input-amount]]
-                                                                          (assoc input-buffers-amounts input-index input-amount))
-                                                                        (node-ref base-node-fields/input-buffers-amounts)
-                                                                        (fields-map base-node-fields/input-buffers-amounts)))))
+    (alter node-ref (fn [node] (assoc node base-node-fields/type-tag              type-tag)))
+    (alter node-ref (fn [node] (assoc node base-node-fields/label                 label)))
+    (alter node-ref (fn [node] (assoc node base-node-fields/inputs-buffers        (reduce #(assoc %1 %2 (ref []))       {} (node-types/get-inputs-tags  type-tag)))))
+    (alter node-ref (fn [node] (assoc node base-node-fields/outputs-buffers       (reduce #(assoc %1 %2 (ref []))       {} (node-types/get-outputs-tags type-tag)))))
+    (alter node-ref (fn [node] (assoc node base-node-fields/required-inputs-loads (reduce #(assoc %1 %2 min-input-load) {} (node-types/get-inputs-tags  type-tag)))))
+    (node-hierarchy/reserve-label label)
     node-ref))
 
 ;; +------------------+
@@ -127,34 +123,80 @@
 ;; |                  |
 ;; +------------------+
 
+(defn set-required-input-load
+  [node-ref input-tag required-load]
+  (when-not (node? node-ref)
+    (throw (node-exceptions/construct node-exceptions/set-required-input-load node-exceptions/not-node
+                                      (str "\"" node-ref "\" is not a node"))))
+  (when-not (utils/in-list? (node-types/get-inputs-tags (get-type-tag node-ref)) input-tag)
+    (throw (node-exceptions/construct node-exceptions/set-required-input-load node-exceptions/unknown-input-tag
+                                      (str "\"" node-ref "\" has no input tagged \"" input-tag "\""))))
+  (when-not (<= min-input-load required-load)
+    (throw (node-exceptions/construct node-exceptions/set-required-input-load node-exceptions/small-min-load
+                                      (str "Given load is too small, must be >= " min-input-load))))
+  (alter node-ref #(assoc % base-node-fields/required-inputs-loads
+                           (assoc (node-ref base-node-fields/required-inputs-loads) input-tag required-load)))
+  nil)
+
 (def ^:private get-input-buffer-ref
   (memoize
-   (fn [node-ref input-index]
-     (nth (node-ref base-node-fields/input-buffers) input-index))))
+   (fn [node-ref input-tag]
+     ((node-ref base-node-fields/inputs-buffers) input-tag))))
 
 (def ^:private get-output-buffer-ref
   (memoize
-   (fn [node-ref output-index]
-     (nth (node-ref base-node-fields/output-buffers) output-index))))
+   (fn [node-ref output-tag]
+     ((node-ref base-node-fields/outputs-buffers) output-tag))))
 
 (defn store
-  [node-ref input-index value]
+  [node-ref input-tag value]
   (when-not (node? node-ref)
     (throw (node-exceptions/construct node-exceptions/store node-exceptions/not-node
                                       (str "\"" node-ref "\" is not a node"))))
-  (alter (get-input-buffer-ref node-ref input-index) #(conj % value)))
+  
+  (when (utils/in-list? (node-types/get-linked-inputs-tags (get-type-tag node-ref)) input-tag)
+    (alter (get-input-buffer-ref node-ref input-tag) #(conj % value)))
+  nil)
 
 (defn flush-output
-  [node-ref output-index]
+  [node-ref output-tag]
   (when-not (node? node-ref)
     (throw (node-exceptions/construct node-exceptions/flush-output node-exceptions/not-node
                                       (str "\"" node-ref "\" is not a node"))))
-  (let [output-buffer-ref (get-output-buffer-ref node-ref output-index)
-        output-buffer @output-buffer-ref]
-    (ref-set output-buffer-ref [])
+  (let [output-buffer-ref (get-output-buffer-ref node-ref output-tag)
+        output-buffer     @output-buffer-ref]
+    (dosync (ref-set output-buffer-ref []))
     output-buffer))
+
+(defn- execute-for-link
+  [node-ref link]
+  (let [linked-inputs-tags (node-link-methods/get-inputs-tags link)]
+   (loop [linked-inputs-buffers (map #(get-input-buffer-ref node-ref %) linked-inputs-tags)
+          done-iteration        false]
+     (let [linked-inputs-required-loads              (map #((node-ref base-node-fields/required-inputs-loads) %) linked-inputs-tags)
+           linked-inputs-buffers-with-required-loads (utils/zip linked-inputs-buffers linked-inputs-required-loads)]
+       (if (->> linked-inputs-buffers-with-required-loads
+                (map (fn [[input-buffer-ref required-load]] (<= required-load (count @input-buffer-ref))))
+                (every? true?))
+         (do
+           (doseq [[output-tag output-values] (apply (partial (node-link-methods/get-handler link) (node-methods/get-fields node-ref))
+                                                     (map (fn [[input-buffer-ref required-load]]
+                                                            (subvec @input-buffer-ref 0 required-load))
+                                                          linked-inputs-buffers-with-required-loads))]
+             (alter (get-output-buffer-ref node-ref output-tag) #(into % output-values)))
+           (doseq [[input-buffer-ref required-load] linked-inputs-buffers-with-required-loads]
+             (alter input-buffer-ref #(subvec % required-load)))
+           (recur linked-inputs-buffers true))
+         done-iteration)))))
 
 (defn execute
   [node-ref]
-  (while ((get-node-ready-validator node-ref) node-ref)
-    ((get-node-function node-ref) node-ref)))
+  (when-not (node? node-ref)
+    (throw (node-exceptions/construct node-exceptions/execute node-exceptions/not-node
+                                      (str "\"" node-ref "\" is not a node"))))
+  (->> node-ref
+       get-type-tag
+       node-types/get-links
+       (map #(execute-for-link node-ref %))
+       doall
+       (some true?)))

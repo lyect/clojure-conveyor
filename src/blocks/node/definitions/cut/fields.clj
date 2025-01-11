@@ -1,6 +1,6 @@
 (ns blocks.node.definitions.cut.fields)
 
 
-(def n ::field-n)
+(def n ::tag-n)
 
-(def fields-list [n])
+(def tags-list [n])

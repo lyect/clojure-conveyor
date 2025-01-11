@@ -1,6 +1,6 @@
 (ns blocks.channel.definitions.channel.fields)
 
 
-(def type-name ::field-type-name)
+(def type-tag ::tag-type-tag)
 
-(def fields-list [type-name])
+(def tags-list [type-tag])

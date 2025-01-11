@@ -1,12 +1,22 @@
 (ns blocks.node.properties)
 
 
-(def type-name       ::property-type-name)
-(def super-name      ::property-super-name)
-(def inputs          ::property-inputs)
-(def outputs         ::property-outputs)
-(def ready-validator ::property-ready-validator)
-(def function        ::property-function)
-(def fields          ::property-fields)
+(def label          ::property-label)
+(def super-type-tag ::property-super-type-tag)
+(def inputs         ::property-inputs)
+(def outputs        ::property-outputs)
+(def links          ::property-links)
+(def inputs-map     ::property-inputs-tag-type-map)
+(def outputs-map    ::property-outputs-tag-type-map)
+(def links-map      ::property-links-map)
+(def fields-tags    ::property-fields-tags)
 
-(def properties-list [type-name super-name inputs outputs ready-validator function fields])
+(def properties-list [label
+                      super-type-tag
+                      inputs
+                      outputs
+                      links
+                      inputs-map
+                      outputs-map
+                      links-map
+                      fields-tags])

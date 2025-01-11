@@ -1,4 +1,4 @@
-(ns blocks.edge.exceptions
+(ns blocks.node.output.exceptions
   (:require [utils]))
 
 
@@ -17,11 +17,11 @@
 ;; |                     |
 ;; +---------------------+
 
-(def create            ::type-create)
-(def get-edge-property ::type-get-edge-property)
+(def create       ::type-create)
+(def get-property ::type-get-property)
 
 (def ^:private type-list [create
-                          get-edge-property])
+                          get-property])
 
 ;; +----------------------+
 ;; |                      |
@@ -29,11 +29,11 @@
 ;; |                      |
 ;; +----------------------+
 
-(def not-edge                              ::cause-not-edge)
-(def edge-properties-missing               ::cause-edge-properties-missing)
+(def type-undeclared ::cause-type-undeclared)
+(def not-output      ::cause-not-output)
 
-(def ^:private cause-list [not-edge
-                           edge-properties-missing])
+(def ^:private cause-list [type-undeclared
+                           not-output])
 
 ;; +---------------------------------------------------+
 ;; |                                                   |
@@ -41,8 +41,8 @@
 ;; |                                                   |
 ;; +---------------------------------------------------+
 
-(def ^:private types-causes-correspondence {create            [edge-properties-missing]
-                                            get-edge-property [not-edge]})
+(def ^:private types-causes-correspondence {create       [type-undeclared]
+                                            get-property [not-output]})
 
 ;; +---------------------------+
 ;; |                           |
@@ -51,7 +51,6 @@
 ;; +---------------------------+
 
 (defn construct
-  "Construct exception with _type_, _cause_ and _message_"
   [type cause message]
   {:pre [(utils/in-list? type-list                          type)
          (utils/in-list? cause-list                         cause)

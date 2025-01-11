@@ -1,6 +1,6 @@
 (ns blocks.channel.definitions.number.fields)
 
 
-(def value ::field-value)
+(def value ::tag-value)
 
-(def fields-list [value])
+(def tags-list [value])

@@ -1,7 +1,8 @@
 (ns blocks.channel.definitions.image.fields)
 
 
-(def width  ::field-width)
-(def height ::field-height)
+(def width  ::tag-width)
+(def height ::tag-height)
 
-(def fields-list [width height])
+(def tags-list [width
+                height])

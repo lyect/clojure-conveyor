@@ -1,4 +1,4 @@
 (ns blocks.channel.definitions.float.fields)
 
 
-(def fields-list [])
+(def tags-list [])

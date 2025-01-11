@@ -1,6 +1,6 @@
 (ns blocks.channel.definitions.png.fields)
 
 
-(def alpha-used ::field-alpha-used)
+(def alpha-used ::tag-alpha-used)
 
-(def fields-list [alpha-used])
+(def tags-list [alpha-used])

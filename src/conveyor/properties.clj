@@ -1,9 +1,8 @@
 (ns conveyor.properties)
 
 
-(def vertices ::conveyorproperties-vertices)
-(def edges    ::conveyorproperties-edges)
-(def inputs   ::conveyorproperties-inputs)
-(def outputs  ::conveyorproperties-outputs)
+(def vertices        ::property-vertices)
+(def edges-map       ::property-edges-map)
+(def outputs-buffers ::property-outputs-buffers)
 
-(def properties-list [vertices edges inputs outputs])
+(def properties-list [vertices edges-map outputs-buffers])

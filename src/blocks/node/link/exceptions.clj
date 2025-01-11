@@ -1,4 +1,4 @@
-(ns blocks.edge.exceptions
+(ns blocks.node.link.exceptions
   (:require [utils]))
 
 
@@ -17,11 +17,11 @@
 ;; |                     |
 ;; +---------------------+
 
-(def create            ::type-create)
-(def get-edge-property ::type-get-edge-property)
+(def create       ::type-create)
+(def get-property ::type-get-property)
 
 (def ^:private type-list [create
-                          get-edge-property])
+                          get-property])
 
 ;; +----------------------+
 ;; |                      |
@@ -29,11 +29,15 @@
 ;; |                      |
 ;; +----------------------+
 
-(def not-edge                              ::cause-not-edge)
-(def edge-properties-missing               ::cause-edge-properties-missing)
+(def not-link                ::cause-not-link)
+(def inputs-tags-not-vector  ::cause-inputs-tags-not-vector)
+(def outputs-tags-not-vector ::cause-outputs-tags-not-vector)
+(def handler-not-function    ::cause-handler-not-function)
 
-(def ^:private cause-list [not-edge
-                           edge-properties-missing])
+(def ^:private cause-list [not-link
+                           inputs-tags-not-vector
+                           outputs-tags-not-vector
+                           handler-not-function])
 
 ;; +---------------------------------------------------+
 ;; |                                                   |
@@ -41,8 +45,10 @@
 ;; |                                                   |
 ;; +---------------------------------------------------+
 
-(def ^:private types-causes-correspondence {create            [edge-properties-missing]
-                                            get-edge-property [not-edge]})
+(def ^:private types-causes-correspondence {create       [inputs-tags-not-vector
+                                                          outputs-tags-not-vector
+                                                          handler-not-function]
+                                            get-property [not-link]})
 
 ;; +---------------------------+
 ;; |                           |
@@ -51,7 +57,6 @@
 ;; +---------------------------+
 
 (defn construct
-  "Construct exception with _type_, _cause_ and _message_"
   [type cause message]
   {:pre [(utils/in-list? type-list                          type)
          (utils/in-list? cause-list                         cause)

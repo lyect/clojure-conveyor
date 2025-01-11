@@ -1,3 +1,3 @@
 (ns blocks.node.definitions.image2image.fields)
 
-(def fields-list [])
+(def tags-list [])

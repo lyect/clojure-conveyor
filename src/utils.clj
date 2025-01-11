@@ -8,3 +8,9 @@
 
 (defn zip [coll1 coll2]
   (map vector coll1 coll2))
+
+(defn ref? [obj]
+  (instance? clojure.lang.Ref obj))
+
+(defn not-ref? [obj]
+  (not (ref? obj)))
